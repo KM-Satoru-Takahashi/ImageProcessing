@@ -5,16 +5,32 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ImageProcessing"
         xmlns:vm="clr-namespace:ImageProcessing.ViewModel"
+        xmlns:dd="urn:gong-wpf-dragdrop"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800"
-        AllowDrop="True"
-        Drop="Window_Drop" PreviewDragOver="Window_PreviewDragOver"
+        Title="ImageProcessing" Height="450" Width="800"
+        AllowDrop="True"       
         >
     <!--VMにバインディングする-->
     <Window.DataContext>
         <vm:MainWindowViewModel/>
     </Window.DataContext>
-    <Grid>
+    
+    <!--ドロップされたファイルの処理-->
+    <!--ファイル情報を有するプロパティを指定-->
+    <!--dd:DragDrop.DropHandler="{Binding}でvmへのバインディングを指定-->
+    <ListBox ItemsSource="{Binding Path=Files}"
+             dd:DragDrop.IsDropTarget="True"
+             dd:DragDrop.DropHandler="{Binding}" 
+             >        
+        <!--画面に表示するファイルパスを有するプロパティを指定-->
+        <ListBox.ItemTemplate>
+            <DataTemplate>
+                <StackPanel>
+                    <TextBlock Text="{Binding FilePath}" />
+                </StackPanel>
+            </DataTemplate>
+        </ListBox.ItemTemplate>
+    </ListBox>
 
-    </Grid>
+
 </Window>

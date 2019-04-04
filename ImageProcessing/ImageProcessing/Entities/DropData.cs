@@ -10,20 +10,20 @@ namespace ImageProcessing.Entities
     /// <summary>
     /// ドロップされたファイルを内部に保持するエンティティ
     /// </summary>
-   internal class DropData
+   public class DropData
     {
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        internal DropData()
+        internal DropData(string path)
         {
-            FileNames = new ObservableCollection<string>();
+            FilePath = path;
         }
 
         /// <summary>
-        /// ドロップされたファイル名のコレクション
+        /// ドロップされたファイルパスのコレクション
         /// </summary>
-        internal ObservableCollection<string> FileNames
+        public string FilePath
         {
             get;
             private set;
