@@ -142,6 +142,8 @@ namespace BMPOpen
             colorPalette = null;
             bitData = null;
 
+            // TODO: 拡張子チェックはドロップ時に行えば良いから後で消しておく
+
             // 拡張子を確認する
             // ファイルの拡張子を取得して小文字に
             string extension = Path.GetExtension(filePath).ToLower();
@@ -173,77 +175,14 @@ namespace BMPOpen
 
             #region BitmapFileHeaderの読み込み
 
-            // todo: Readの第2引数が0はおかしいから修正する必要あるかも
-
-            // bmpFileType
-            fs.Read(readData, 0, 2);
-            bmpFH.bmpFileType = BitConverter.ToUInt16(readData, 0);
-
-            // bmpFileSize
-            fs.Read(readData, 0, 4);
-            bmpFH.bmpFileSize = BitConverter.ToUInt32(readData, 0);
-
-            // bmpReserved1
-            fs.Read(readData, 0, 2);
-            bmpFH.bmpReservedRegion1 = BitConverter.ToUInt16(readData, 0);
-
-            // bmpReserved2
-            fs.Read(readData, 0, 2);
-            bmpFH.bmpReservedRegion2 = BitConverter.ToUInt16(readData, 0);
-
-            // bmpOffset
-            fs.Read(readData, 0, 4);
-            bmpFH.bmpOffsetBits = BitConverter.ToUInt32(readData, 0);
+            // TODO: readDataは内部でローカルで持たせてもいいかも
+            bmpFH = ReadBitmapFileHeader(fs, bmpFH, readData);
 
             #endregion
 
             #region BitmapInfoHeaderの読み込み
 
-            // TODO: Readの第2引数が0はおかしいから修正する必要あるかも
-
-            // bmpInfoSize
-            fs.Read(readData, 0, 4);
-            bmpIH.bmpInfoSize = BitConverter.ToUInt32(readData, 0);
-
-            // bmpWidth
-            fs.Read(readData, 0, 4);
-            bmpIH.bmpWidth = BitConverter.ToInt32(readData, 0);
-
-            // bmpHeight
-            fs.Read(readData, 0, 4);
-            bmpIH.bmpHeight = BitConverter.ToInt32(readData, 0);
-
-            // bmpPlains
-            fs.Read(readData, 0, 2);
-            bmpIH.bmpPlains = BitConverter.ToUInt16(readData, 0);
-
-            // bmpBitCount
-            fs.Read(readData, 0, 2);
-            bmpIH.bmpBitCount = BitConverter.ToUInt16(readData, 0);
-
-            // bmpCompression
-            fs.Read(readData, 0, 4);
-            bmpIH.bmpCompression = BitConverter.ToUInt32(readData, 0);
-
-            // bmpImageSize
-            fs.Read(readData, 0, 4);
-            bmpIH.bmpImageSize = BitConverter.ToUInt32(readData, 0);
-
-            // bmpXResolution
-            fs.Read(readData, 0, 4);
-            bmpIH.bmpXResolution = BitConverter.ToInt32(readData, 0);
-
-            // bmpYResolution
-            fs.Read(readData, 0, 4);
-            bmpIH.bmpYResolution = BitConverter.ToInt32(readData, 0);
-
-            // bmpColorPalette
-            fs.Read(readData, 0, 4);
-            bmpIH.bmpColorPalette = BitConverter.ToUInt32(readData, 0);
-
-            // bmpImportantColor
-            fs.Read(readData, 0, 4);
-            bmpIH.bmpImportantColor = BitConverter.ToUInt32(readData, 0);
+            bmpIH = ReadBitmapInfoHeader(fs, bmpIH, readData);
 
             #endregion
 
@@ -309,6 +248,114 @@ namespace BMPOpen
 
             #endregion
         }
+
+        /// <summary>
+        /// BitmapFileHeaderの読み取り
+        /// </summary>
+        /// <param name="fs"></param>
+        /// <param name="bmpFH"></param>
+        /// <param name="readData">読み取りに用いるバイト配列</param>
+        /// <returns>読み取った値を組み込んだ構造体</returns>
+        private BitMapFileHeader ReadBitmapFileHeader(FileStream fs, BitMapFileHeader bmpFH, byte[] readData)
+        {
+            if (fs == null)
+            {
+                return bmpFH;
+            }
+
+            // todo: Readの第2引数が0はおかしいから修正する必要あるかも
+
+            // bmpFileType
+            fs.Read(readData, 0, 2);
+            bmpFH.bmpFileType = BitConverter.ToUInt16(readData, 0);
+
+            // bmpFileSize
+            fs.Read(readData, 0, 4);
+            bmpFH.bmpFileSize = BitConverter.ToUInt32(readData, 0);
+
+            // bmpReserved1
+            fs.Read(readData, 0, 2);
+            bmpFH.bmpReservedRegion1 = BitConverter.ToUInt16(readData, 0);
+
+            // bmpReserved2
+            fs.Read(readData, 0, 2);
+            bmpFH.bmpReservedRegion2 = BitConverter.ToUInt16(readData, 0);
+
+            // bmpOffset
+            fs.Read(readData, 0, 4);
+            bmpFH.bmpOffsetBits = BitConverter.ToUInt32(readData, 0);
+
+            return bmpFH;
+        }
+
+        /// <summary>
+        /// BitmapInfoHeaderの読み取り
+        /// </summary>
+        /// <param name="fs"></param>
+        /// <param name="bmpIH"></param>
+        /// <param name="readData"></param>
+        /// <returns></returns>
+        private BitMapInfoHeader ReadBitmapInfoHeader(FileStream fs, BitMapInfoHeader bmpIH, byte[] readData)
+        {
+            if (fs == null)
+            {
+                return bmpIH;
+            }
+
+            // TODO: Readの第2引数が0はおかしいから修正する必要あるかも
+            // bmpInfoSize
+            fs.Read(readData, 0, 4);
+            bmpIH.bmpInfoSize = BitConverter.ToUInt32(readData, 0);
+
+            // bmpWidth
+            fs.Read(readData, 0, 4);
+            bmpIH.bmpWidth = BitConverter.ToInt32(readData, 0);
+
+            // bmpHeight
+            fs.Read(readData, 0, 4);
+            bmpIH.bmpHeight = BitConverter.ToInt32(readData, 0);
+
+            // bmpPlains
+            fs.Read(readData, 0, 2);
+            bmpIH.bmpPlains = BitConverter.ToUInt16(readData, 0);
+
+            // bmpBitCount
+            fs.Read(readData, 0, 2);
+            bmpIH.bmpBitCount = BitConverter.ToUInt16(readData, 0);
+
+            // bmpCompression
+            fs.Read(readData, 0, 4);
+            bmpIH.bmpCompression = BitConverter.ToUInt32(readData, 0);
+
+            // bmpImageSize
+            fs.Read(readData, 0, 4);
+            bmpIH.bmpImageSize = BitConverter.ToUInt32(readData, 0);
+
+            // bmpXResolution
+            fs.Read(readData, 0, 4);
+            bmpIH.bmpXResolution = BitConverter.ToInt32(readData, 0);
+
+            // bmpYResolution
+            fs.Read(readData, 0, 4);
+            bmpIH.bmpYResolution = BitConverter.ToInt32(readData, 0);
+
+            // bmpColorPalette
+            fs.Read(readData, 0, 4);
+            bmpIH.bmpColorPalette = BitConverter.ToUInt32(readData, 0);
+
+            // bmpImportantColor
+            fs.Read(readData, 0, 4);
+            bmpIH.bmpImportantColor = BitConverter.ToUInt32(readData, 0);
+
+            return bmpIH;
+        }
+
+
+        private System.Drawing.Color[] ReadColorPalette(uint bmpOffsetBits)
+        {
+
+        }
+
 
         /// <summary>
         /// バイナリデータを.bmpとして保存する
@@ -428,6 +475,13 @@ namespace BMPOpen
                 // error manage
             }
 
+            if (fs == null)
+            {
+                return false;
+            }
+
+            #region FileHeaderの書き込み
+
             // TODO: 第2引数がおかしいから修正する必要あるかも
             // bmpFHの書き込み
             fs.Write(BitConverter.GetBytes(bmpFH.bmpFileType), 0, 2);
@@ -435,6 +489,10 @@ namespace BMPOpen
             fs.Write(BitConverter.GetBytes(bmpFH.bmpReservedRegion1), 0, 2);
             fs.Write(BitConverter.GetBytes(bmpFH.bmpReservedRegion2), 0, 2);
             fs.Write(BitConverter.GetBytes(bmpFH.bmpOffsetBits), 0, 4);
+
+            #endregion
+
+            #region FileInfoの書き込み
 
             // TODO: 第2引数がおかしいから修正する必要あるかも
             // bmpFIの書き込み
@@ -450,11 +508,19 @@ namespace BMPOpen
             fs.Write(BitConverter.GetBytes(bmpFI.bmpColorPalette), 0, 4);
             fs.Write(BitConverter.GetBytes(bmpFI.bmpImportantColor), 0, 4);
 
+            #endregion
+
+            #region カラーパレットの書き込み
+
             // カラーパレットの書き込み
             if (paletteSize != 0)
             {
                 fs.Write(colorPalette, 0, colorPalette.Length);
             }
+
+            #endregion
+
+            #region 画像データの書き込み
 
             // 画像データの書き込み
             for (int i = 0; i < bmpFI.bmpHeight - 1; i++)
@@ -462,10 +528,9 @@ namespace BMPOpen
                 fs.Write(bitData, i * imageWidthBytes, imageWidthBytes);
             }
 
-            if (fs == null)
-            {
-                return false;
-            }
+            #endregion
+
+            #region 開放処理
 
             if (fs != null)
             {
@@ -473,6 +538,8 @@ namespace BMPOpen
                 fs.Close();
                 fs.Dispose();
             }
+
+            #endregion
 
             return true;
         }
