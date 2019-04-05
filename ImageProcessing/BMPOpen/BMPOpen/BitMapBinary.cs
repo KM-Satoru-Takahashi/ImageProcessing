@@ -425,13 +425,54 @@ namespace BMPOpen
             }
             catch (Exception e)
             {
+                // error manage
+            }
+
+            // TODO: 第2引数がおかしいから修正する必要あるかも
+            // bmpFHの書き込み
+            fs.Write(BitConverter.GetBytes(bmpFH.bmpFileType), 0, 2);
+            fs.Write(BitConverter.GetBytes(bmpFH.bmpFileSize), 0, 4);
+            fs.Write(BitConverter.GetBytes(bmpFH.bmpReservedRegion1), 0, 2);
+            fs.Write(BitConverter.GetBytes(bmpFH.bmpReservedRegion2), 0, 2);
+            fs.Write(BitConverter.GetBytes(bmpFH.bmpOffsetBits), 0, 4);
+
+            // TODO: 第2引数がおかしいから修正する必要あるかも
+            // bmpFIの書き込み
+            fs.Write(BitConverter.GetBytes(bmpFI.bmpImageSize), 0, 4);
+            fs.Write(BitConverter.GetBytes(bmpFI.bmpWidth), 0, 4);
+            fs.Write(BitConverter.GetBytes(bmpFI.bmpHeight), 0, 4);
+            fs.Write(BitConverter.GetBytes(bmpFI.bmpPlains), 0, 2);
+            fs.Write(BitConverter.GetBytes(bmpFI.bmpBitCount), 0, 2);
+            fs.Write(BitConverter.GetBytes(bmpFI.bmpCompression), 0, 4);
+            fs.Write(BitConverter.GetBytes(bmpFI.bmpImageSize), 0, 4);
+            fs.Write(BitConverter.GetBytes(bmpFI.bmpXResolution), 0, 4);
+            fs.Write(BitConverter.GetBytes(bmpFI.bmpYResolution), 0, 4);
+            fs.Write(BitConverter.GetBytes(bmpFI.bmpColorPalette), 0, 4);
+            fs.Write(BitConverter.GetBytes(bmpFI.bmpImportantColor), 0, 4);
+
+            // カラーパレットの書き込み
+            if (paletteSize != 0)
+            {
+                fs.Write(colorPalette, 0, colorPalette.Length);
+            }
+
+            // 画像データの書き込み
+            for (int i = 0; i < bmpFI.bmpHeight - 1; i++)
+            {
+                fs.Write(bitData, i * imageWidthBytes, imageWidthBytes);
+            }
+
+            if (fs == null)
+            {
+                return false;
             }
 
             if (fs != null)
             {
-
+                // dispose
+                fs.Close();
+                fs.Dispose();
             }
-
 
             return true;
         }
