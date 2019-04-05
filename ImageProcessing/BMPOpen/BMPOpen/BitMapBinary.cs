@@ -357,6 +357,30 @@ namespace BMPOpen
             // 画像データの幅バイト数を計算
             int imageWidthBytes = ((width * height + 31) / 32) * 4;
 
+            // 画像データのサイズを確認する
+            if (bitData.Length != width * height)
+            {
+                return false;
+            }
+
+            // カラーパレット数を入手
+            UInt32 paletteSize = 0;
+            byte[] colorPalette = null;
+
+            if (bitCount == 8)
+            {
+                // 8bit
+                paletteSize = 256;
+                colorPalette = new byte[paletteSize * 4];
+                for (int i = 0; i < 256; i++)
+                {
+                    colorPalette[i * 4] = (byte)i; // B
+                    colorPalette[i * 4 + 1] = (byte)i; // G
+                    colorPalette[i * 4 + 2] = (byte)i; // R
+                    colorPalette[i * 4 + 3] = (byte)0; // A
+                }
+            }
+
             return true;
         }
 
