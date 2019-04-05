@@ -358,7 +358,7 @@ namespace BMPOpen
             int imageWidthBytes = ((width * height + 31) / 32) * 4;
 
             // 画像データのサイズを確認する
-            if (bitData.Length != width * height)
+            if (bitData.Length != imageWidthBytes * height)
             {
                 return false;
             }
@@ -380,6 +380,58 @@ namespace BMPOpen
                     colorPalette[i * 4 + 3] = (byte)0; // A
                 }
             }
+            else
+            {
+                // monochromeのとき？
+            }
+
+            #region bitmapFileHeaderの作成
+
+            // bitmapFileHeaderの作成
+            BitMapFileHeader bmpFH = new BitMapFileHeader();
+            // TODO: 定数化、情報追加
+            bmpFH.bmpFileType = 0x4d42;
+            bmpFH.bmpReservedRegion1 = 0;
+            bmpFH.bmpReservedRegion2 = 0;
+            // TODO: MORE INFO
+            bmpFH.bmpOffsetBits = 14 + 40 + paletteSize * 4;
+            bmpFH.bmpFileSize = bmpFH.bmpOffsetBits + (uint)(imageWidthBytes * height);
+
+            #endregion
+
+            #region bitmapFielInfoの作成
+
+            BitMapInfoHeader bmpFI = new BitMapInfoHeader();
+            bmpFI.bmpInfoSize = 40;
+            bmpFI.bmpWidth = width;
+            bmpFI.bmpHeight = height;
+            bmpFI.bmpPlains = 1;
+            bmpFI.bmpBitCount = (ushort)bitCount;
+            bmpFI.bmpCompression = 0;
+            bmpFI.bmpImageSize = 0;
+            bmpFI.bmpXResolution = 0;
+            bmpFI.bmpYResolution = 0;
+            bmpFI.bmpColorPalette = paletteSize;
+            bmpFI.bmpImportantColor = paletteSize;
+
+            #endregion
+
+
+            // ファイルを開く
+            FileStream fs = null;
+            try
+            {
+                fs = File.Open(filePath, FileMode.Create, FileAccess.Write);
+            }
+            catch (Exception e)
+            {
+            }
+
+            if (fs != null)
+            {
+
+            }
+
 
             return true;
         }
