@@ -12,7 +12,7 @@ namespace ImageProcessing.Entities
     /// <summary>
     /// ドロップされたファイルを内部に保持するエンティティ
     /// </summary>
-   public class DropData
+    public class DropData
     {
         /// <summary>
         /// コンストラクタ

@@ -32,6 +32,7 @@ namespace ImageProcessing.ViewModel
         internal MainWindowViewModel()
         {
             Initialize();
+            _dropFiles = new ObservableCollection<Entities.DropData>();
         }
 
         /// <summary>
@@ -51,11 +52,6 @@ namespace ImageProcessing.ViewModel
         {
             get
             {
-                if (_dropFiles == null)
-                {
-                    _dropFiles = new ObservableCollection<Entities.DropData>();
-                }
-
                 return _dropFiles;
             }
         }
