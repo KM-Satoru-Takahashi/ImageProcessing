@@ -9,6 +9,9 @@ namespace BMPOpen
     {
         static void Main(string[] args)
         {
+            BitMapImage bitMapImage = new BitMapImage();
+
+            bitMapImage.GetWriteableBitmapSample();
         }
     }
 }

@@ -173,98 +173,12 @@ namespace BMPOpen
                 return false;
             }
 
+            // TODO: fs.readで一気に読み取ってから分配したほうが良いかも
+            // そうすることでfsを引数に渡さずにConvert/割付ができる
+
             #region BitmapFileHeaderの読み込み
 
-            // TODO: readDataは内部でローカルで持たせてもいいかも
-            bmpFH = ReadBitmapFileHeader(fs, bmpFH, readData);
-
-            #endregion
-
-            #region BitmapInfoHeaderの読み込み
-
-            bmpIH = ReadBitmapInfoHeader(fs, bmpIH, readData);
-
-            #endregion
-
-            #region カラーパレットの取得
-
-            // カラーパレットの計算を行う
-            // bmpOffsetからFHとIHのを引いたものがカラーパレットのサイズ
-            // byteにするので4で割る
-            long colorPaletteSize = (bmpFH.bmpOffsetBits - 14 - 40) / 4;
-
-            // カラーパレットに得た値を埋め込む
-            // リトルエンディアンなので逆順に入れ込む必要あり
-            if (colorPaletteSize != 0)
-            {
-                colorPalette = new System.Drawing.Color[colorPaletteSize];
-                for (int i = 0; i < colorPaletteSize; i++)
-                {
-                    // TODO: Readの第2引数が0はおかしいから修正する必要あるかも
-                    fs.Read(readData, 0, 4);
-                    colorPalette[i] =
-                        System.Drawing.Color.FromArgb(
-                        // リトルエンディアンなので逆順に入れ込む必要あり
-                                readData[3],
-                                readData[2],
-                                readData[1],
-                                readData[0]);
-                }
-            }
-            else
-            {
-                // colorPalette = null;
-            }
-
-            #endregion
-
-            #region 画像データの取得
-
-            // 画像データを取得する
-            // 画像データの幅バイト数を計算する
-            int imageWidthBits = ((bmpIH.bmpWidth * bmpIH.bmpBitCount + 31) / 32) * 4;
-
-            // 読み込み時のメモリを確保する
-            bitData = new byte[imageWidthBits * bmpIH.bmpHeight];
-
-            // 画像データを読み込む
-            for (int i = 0; i < bmpIH.bmpHeight - 1; i++)
-            {
-                fs.Read(bitData, i * imageWidthBits, i);
-            }
-
-            #endregion
-
-            #region 開放処理
-
-            // リソースを開放する
-            if (fs != null)
-            {
-                fs.Close();
-                fs.Dispose();
-            }
-
-            return true;
-
-            #endregion
-        }
-
-        /// <summary>
-        /// BitmapFileHeaderの読み取り
-        /// </summary>
-        /// <param name="fs"></param>
-        /// <param name="bmpFH"></param>
-        /// <param name="readData">読み取りに用いるバイト配列</param>
-        /// <returns>読み取った値を組み込んだ構造体</returns>
-        private BitMapFileHeader ReadBitmapFileHeader(FileStream fs, BitMapFileHeader bmpFH, byte[] readData)
-        {
-            if (fs == null)
-            {
-                return bmpFH;
-            }
-
             // todo: Readの第2引数が0はおかしいから修正する必要あるかも
-
             // bmpFileType
             fs.Read(readData, 0, 2);
             bmpFH.bmpFileType = BitConverter.ToUInt16(readData, 0);
@@ -285,22 +199,9 @@ namespace BMPOpen
             fs.Read(readData, 0, 4);
             bmpFH.bmpOffsetBits = BitConverter.ToUInt32(readData, 0);
 
-            return bmpFH;
-        }
+            #endregion
 
-        /// <summary>
-        /// BitmapInfoHeaderの読み取り
-        /// </summary>
-        /// <param name="fs"></param>
-        /// <param name="bmpIH"></param>
-        /// <param name="readData"></param>
-        /// <returns></returns>
-        private BitMapInfoHeader ReadBitmapInfoHeader(FileStream fs, BitMapInfoHeader bmpIH, byte[] readData)
-        {
-            if (fs == null)
-            {
-                return bmpIH;
-            }
+            #region BitmapInfoHeaderの読み込み
 
             // TODO: Readの第2引数が0はおかしいから修正する必要あるかも
             // bmpInfoSize
@@ -347,15 +248,71 @@ namespace BMPOpen
             fs.Read(readData, 0, 4);
             bmpIH.bmpImportantColor = BitConverter.ToUInt32(readData, 0);
 
-            return bmpIH;
+
+            #endregion
+
+            #region カラーパレットの取得
+
+            // カラーパレットの計算を行う
+            // bmpOffsetからFHとIHのを引いたものがカラーパレットのサイズ
+            // byteにするので4で割る
+            long colorPaletteSize = (bmpFH.bmpOffsetBits - 14 - 40) / 4;
+
+            // カラーパレットに得た値を埋め込む
+            // リトルエンディアンなので逆順に入れ込む必要あり
+            if (colorPaletteSize != 0)
+            {
+                colorPalette = new System.Drawing.Color[colorPaletteSize];
+                for (int i = 0; i < colorPaletteSize; i++)
+                {
+                    // TODO: Readの第2引数が0はおかしいから修正する必要あるかも
+                    fs.Read(readData, 0, 4);
+                    colorPalette[i] =
+                        System.Drawing.Color.FromArgb(
+                                // リトルエンディアンなので逆順に入れ込む必要あり
+                                readData[3],
+                                readData[2],
+                                readData[1],
+                                readData[0]);
+                }
+            }
+            else
+            {
+                // colorPalette = null;
+            }
+
+            #endregion
+
+            #region 画像データの取得
+
+            // 画像データを取得する
+            // 画像データの幅バイト数を計算する
+            int imageWidthBits = ((bmpIH.bmpWidth * bmpIH.bmpBitCount + 31) / 32) * 4;
+
+            // 読み込み時のメモリを確保する
+            bitData = new byte[imageWidthBits * bmpIH.bmpHeight];
+
+            // 画像データを読み込む
+            for (int i = 0; i < bmpIH.bmpHeight - 1; i++)
+            {
+                fs.Read(bitData, i * imageWidthBits, i);
+            }
+
+            #endregion
+
+            #region 開放処理
+
+            // リソースを開放する
+            if (fs != null)
+            {
+                fs.Close();
+                fs.Dispose();
+            }
+
+            return true;
+
+            #endregion
         }
-
-
-        private System.Drawing.Color[] ReadColorPalette(uint bmpOffsetBits)
-        {
-
-        }
-
 
         /// <summary>
         /// バイナリデータを.bmpとして保存する
