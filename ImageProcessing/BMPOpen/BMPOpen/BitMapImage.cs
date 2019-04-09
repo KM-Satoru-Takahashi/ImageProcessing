@@ -126,15 +126,19 @@ namespace BMPOpen
 
             #region ヘッダ部 54byte [0]~[53]
 
+            #region BITMAP FILEHEADER
+
             // [0]~[1]はデータフォーマット
+            // この部分はリトルエンディアンではないので注意する
+            // BMPなら0x42, 0x4DでASCIIコードBM
             byte[] dataFormat = (new ArraySegment<byte>(bitmapArr, 0, 2)).Array;
             splitBitmapArr.Add(dataFormat);
 
-            // [2]~[5]はファイルサイズ
+            // [2]~[5]はファイルサイズ byte
             byte[] fileSize = (new ArraySegment<byte>(bitmapArr, 2, 4)).Array;
             splitBitmapArr.Add(fileSize);
 
-            // [6]~[7], [8]~[9]は予約領域1, 2
+            // [6]~[7], [8]~[9]は予約領域1, 2→常に0
             byte[] reserved1 = (new ArraySegment<byte>(bitmapArr, 6, 2)).Array;
             splitBitmapArr.Add(reserved1);
             byte[] reserver2 = (new ArraySegment<byte>(bitmapArr, 8, 2)).Array;
@@ -144,17 +148,66 @@ namespace BMPOpen
             byte[] headerSize = (new ArraySegment<byte>(bitmapArr, 10, 4)).Array;
             splitBitmapArr.Add(headerSize);
 
-            // [14]~[17]は情報ヘッダのサイズ
+            #endregion
+
+            #region BITMAP INFOHEADER
+
+            // [14]~[17]は情報ヘッダのサイズ→40 byte
             byte[] infoHeaderSize = (new ArraySegment<byte>(bitmapArr, 14, 4)).Array;
             splitBitmapArr.Add(infoHeaderSize);
 
-            // [18]~[21]は画像の幅
+            // [18]~[21]は画像の幅 pixel(px)
             byte[] imageWidth = (new ArraySegment<byte>(bitmapArr, 18, 4)).Array;
             splitBitmapArr.Add(imageWidth);
+
+            // [22]~[25]は画像の高さ pixel(px)
+            byte[] imageHeight = (new ArraySegment<byte>(bitmapArr, 22, 4)).Array;
+            splitBitmapArr.Add(imageHeight);
+
+            // [26]~[27]はプレーン数(常に1→01 00)
+            byte[] plane = (new ArraySegment<byte>(bitmapArr, 26, 2)).Array;
+            splitBitmapArr.Add(plane);
+
+            // [28]~[29]は1画素の色数
+            // RGBなら1byte*3で24bit, グレースケールなら1byteで8bit
+            byte[] pixel = (new ArraySegment<byte>(bitmapArr, 28, 2)).Array;
+            splitBitmapArr.Add(pixel);
+
+            // [30]~[33]は圧縮形式
+            byte[] compressionStyle = (new ArraySegment<byte>(bitmapArr, 30, 4)).Array;
+            splitBitmapArr.Add(compressionStyle);
+
+            // [34]~[37]は圧縮サイズ byte
+            byte[] compressionSize = (new ArraySegment<byte>(bitmapArr, 34, 4)).Array;
+            splitBitmapArr.Add(compressionSize);
+
+            // [38]~[41]は水平解像度 ppm*(px/m)
+            byte[] horizontalResolution = (new ArraySegment<byte>(bitmapArr, 38, 4)).Array;
+            splitBitmapArr.Add(horizontalResolution);
+
+            // [42]~[45]は垂直解像度 ppm*(px/m)
+            byte[] verticalResolution = (new ArraySegment<byte>(bitmapArr, 42, 4)).Array;
+            splitBitmapArr.Add(verticalResolution);
+
+            // [46]~[49]は色数
+            // 0なら全色を使用
+            byte[] color = (new ArraySegment<byte>(bitmapArr, 46, 4)).Array;
+            splitBitmapArr.Add(color);
+
+            // [50]~[53]は重要色数
+            // 0なら全色を使用
+            byte[] importantColor = (new ArraySegment<byte>(bitmapArr, 50, 4)).Array;
+            splitBitmapArr.Add(importantColor);
+
+            #endregion
 
             #endregion
 
             #region データ部
+
+            // 読み込んだbitmapArrのうち、[54]~最後までがデータ部となる
+            int dataCount = bitmapArr.Count() - 54;
+            byte[] bitmapDataArr = (new ArraySegment<byte>(bitmapArr, 54, dataCount)).Array;
 
             #endregion
 
