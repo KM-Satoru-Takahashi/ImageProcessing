@@ -13,15 +13,23 @@ namespace ImageProcessing.Model
     {
         #region field
 
+        /// <summary>
+        /// MainWindowModel
+        /// </summary>
+        private MainWindowModel _parent = null;
 
         #endregion
 
 
-
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="model"></param>
         internal ImageManager(MainWindowModel model)
         {
-
+            _parent = model;
         }
+
 
     }
 }
