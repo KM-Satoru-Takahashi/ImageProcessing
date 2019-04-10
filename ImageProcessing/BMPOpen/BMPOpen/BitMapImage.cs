@@ -44,7 +44,7 @@ namespace BMPOpen
             System.IO.MemoryStream mms = new System.IO.MemoryStream();
 
             // bmpをmmsと関連付けする
-            bmp.Save(mms, System.Drawing.Imaging.ImageFormat.Jpeg);
+            bmp.Save(mms, System.Drawing.Imaging.ImageFormat.Bmp);
 
             // bmpをバイナリにしてByte配列に
             Byte[] bmpArr = mms.GetBuffer();
@@ -94,10 +94,13 @@ namespace BMPOpen
             }
 
             // [0]~[1]はデータフォーマット
-            byte[] dataFormat = (new ArraySegment<byte>(dataArr, 0, 2)).Array;
+            // byte[] dataFormat = (new ArraySegment<byte>(dataArr, 0, 2)).Array;
+            byte[] dataFormat = new byte[2];
+            Array.Copy(dataArr, 0, dataFormat, 0, 2);
 
-            // 16進数を小文字の文字列化
-            string first = BitConverter.ToString(dataFormat).ToLower();
+            // 16進数を小文字の文字列化            
+            string first = System.Text.Encoding.ASCII.GetString(dataFormat).ToLower();
+
 
             if (first == "bm")
             {
@@ -131,17 +134,21 @@ namespace BMPOpen
             // [0]~[1]はデータフォーマット
             // この部分はリトルエンディアンではないので注意する
             // BMPなら0x42, 0x4DでASCIIコードBM
-            byte[] dataFormat = (new ArraySegment<byte>(bitmapArr, 0, 2)).Array;
+            byte[] dataFormat = new byte[2];
+            Array.Copy(bitmapArr, 0, dataFormat, 0, 2);
             splitBitmapArr.Add(dataFormat);
 
             // [2]~[5]はファイルサイズ byte
-            byte[] fileSize = (new ArraySegment<byte>(bitmapArr, 2, 4)).Array;
+            byte[] fileSize = new byte[4];
+            Array.Copy(bitmapArr, 2, fileSize, 0, 4);
             splitBitmapArr.Add(fileSize);
 
             // [6]~[7], [8]~[9]は予約領域1, 2→常に0
-            byte[] reserved1 = (new ArraySegment<byte>(bitmapArr, 6, 2)).Array;
+            byte[] reserved1 = new byte[2];
+            Array.Copy(bitmapArr, 6, reserved1, 0, 2);
             splitBitmapArr.Add(reserved1);
-            byte[] reserver2 = (new ArraySegment<byte>(bitmapArr, 8, 2)).Array;
+            byte[] reserver2 = new byte[2];
+            Array.Copy(bitmapArr, 8, reserver2, 0, 2);
             splitBitmapArr.Add(reserver2);
 
             // [10]~[13]はヘッダサイズ→データ部の先頭位置

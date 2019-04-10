@@ -29,6 +29,7 @@ namespace ImageProcessing.ViewModel
         /// <summary>
         /// コンストラクタ
         /// </summary>
+        /// <remarks>アクセスは初回実行時publicでないと実行時エラー</remarks>
         internal MainWindowViewModel()
         {
             Initialize();
