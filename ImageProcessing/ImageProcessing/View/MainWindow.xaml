@@ -20,13 +20,14 @@
     <!--dd:DragDrop.DropHandler="{Binding}でvmへのバインディングを指定-->
     <ListBox ItemsSource="{Binding Path=Files}"
              dd:DragDrop.IsDropTarget="True"
-             dd:DragDrop.DropHandler="{Binding}" 
-             >        
+             dd:DragDrop.DropHandler="{Binding}" Margin="0,0,2,150" 
+             >
         <!--画面に表示するファイルパスを有するプロパティを指定-->
         <ListBox.ItemTemplate>
             <DataTemplate>
                 <StackPanel>
                     <TextBlock Text="{Binding FilePath}" />
+                    <Image Source="{Binding ImageData}"/>
                 </StackPanel>
             </DataTemplate>
         </ListBox.ItemTemplate>

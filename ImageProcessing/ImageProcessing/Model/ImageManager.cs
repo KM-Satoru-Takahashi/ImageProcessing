@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ImageProcessing.Entities;
 using System.IO;
 using System.Drawing;
+using System.Windows.Media.Imaging;
 
 namespace ImageProcessing.Model
 {
@@ -20,6 +21,16 @@ namespace ImageProcessing.Model
         /// MainWindowModel
         /// </summary>
         private MainWindowModel _parent = null;
+
+        /// <summary>
+        /// インチ(mm)
+        /// </summary>
+        private const float INCH = 25.4f;
+
+        /// <summary>
+        /// メートル(mm)
+        /// </summary>
+        private const float METER = 1000;
 
         #endregion
 
@@ -60,11 +71,11 @@ namespace ImageProcessing.Model
                 // 正常に取得できていればリストに追加する
                 if (bmpBinaryArr != null && bmpBinaryArr.Any() == true)
                 {
-                    DropData bmpData = CreateDropData(bmpBinaryArr);
+                    DropData data = CreateDropData(bmpBinaryArr, path);
 
-                    if (bmpData != null)
+                    if (data != null)
                     {
-                        dropDatas.Add(bmpData);
+                        dropDatas.Add(data);
                     }
                 }
 
@@ -118,7 +129,7 @@ namespace ImageProcessing.Model
         /// </summary>
         /// <param name="bmpBinaryData">BMPファイルのバイナリデータ</param>
         /// <returns>BMPファイルのバイナリデータを処理したDropDataオブジェクト</returns>
-        private DropData CreateDropData(byte[] bmpBinaryData)
+        private DropData CreateDropData(byte[] bmpBinaryData, string filePath)
         {
             // [0]~[53]はヘッダ情報なので[54]がなければbmpファイルではない
             // [0]~[54]までの要素数は55なのでLengthが55未満なら異常
@@ -128,17 +139,21 @@ namespace ImageProcessing.Model
             }
 
             // オブジェクトを生成
-            DropData dropData = SetBMPBinaryData(bmpBinaryData);
+            DropData dropData = SetBMPData(bmpBinaryData, filePath);
 
-
+            dropData.ImageData = CreateWBMP(dropData);
 
             return dropData;
         }
 
-
-        private DropData SetBMPBinaryData(byte[] bmpBinaryData)
+        /// <summary>
+        /// DropDataオブジェクトにBMP画像のバイナリデータを入れ込む
+        /// </summary>
+        /// <param name="bmpBinaryData">bmpファイルのバイナリデータ配列</param>
+        /// <returns>バイナリデータを入れ込んだDropDataオブジェクト</returns>
+        private DropData SetBMPData(byte[] bmpBinaryData, string filePath)
         {
-            DropData dropData = new DropData();
+            DropData dropData = new DropData(filePath);
 
             #region ヘッダ部
 
@@ -178,10 +193,10 @@ namespace ImageProcessing.Model
             Array.Copy(bmpBinaryData, 34, dropData.CompressionSize, 0, 4);
 
             // [38]~[41]水平解像度
-            Array.Copy(bmpBinaryData, 38, dropData.VerticalResolution, 0, 4);
+            Array.Copy(bmpBinaryData, 38, dropData.VerticalResolutionDPM, 0, 4);
 
             // [42]~[45]垂直解像度
-            Array.Copy(bmpBinaryData, 42, dropData.HorizontalResolution, 0, 4);
+            Array.Copy(bmpBinaryData, 42, dropData.HorizontalResolutionDPM, 0, 4);
 
             // [46]~[49]色数
             Array.Copy(bmpBinaryData, 46, dropData.Color, 0, 4);
@@ -190,6 +205,10 @@ namespace ImageProcessing.Model
             Array.Copy(bmpBinaryData, 50, dropData.ImportantColor, 0, 4);
 
             #endregion
+
+            // 解像度をDPMからDPIにする必要がある
+            dropData.HorizontalResolutionDPI = ConversionDPMtoDPI(dropData.HorizontalResolutionDPM);
+            dropData.VerticalResolutionDPI = ConversionDPMtoDPI(dropData.VerticalResolutionDPM);
 
             // データ部の配列の要素数を調べる必要がある
             int bmpLength = bmpBinaryData.Length;
@@ -203,8 +222,90 @@ namespace ImageProcessing.Model
             return dropData;
         }
 
+        /// <summary>
+        /// 解像度のDPM値をDPI値に変換する(バイナリデータ)
+        /// </summary>
+        /// <param name="binaryDPM">解像度のDPM(dot/meter)値</param>
+        /// <returns>解像度のDPI(dot/inch)値</returns>
+        private float ConversionDPMtoDPI(byte[] binaryDPM)
+        {
+            // バイト配列を数値に変換
+            // リトルエンディアンはそのままConvertしてくれる
+            int dpm = BitConverter.ToInt32(binaryDPM, 0);
+
+            return ConversionDPMtoDPI(dpm);
+        }
+
+        /// <summary>
+        /// 解像度のDPM値をDPI値に変換する(数値)
+        /// </summary>
+        /// <param name="dpm">解像度のDPM(dot/meter)値</param>
+        /// <returns>解像度のDPI(dot/inch)値</returns>
+        private float ConversionDPMtoDPI(float dpm)
+        {
+            return dpm * INCH / METER;
+        }
+
+        /// <summary>
+        /// BMPのバイナリデータからWriteableBitmapデータを作成する
+        /// </summary>
+        /// <param name="bmpData">各データを入れ込んだエンティティ</param>
+        /// <returns>WriteableBitampオブジェクト</returns>
+        private WriteableBitmap CreateWBMP(DropData bmpData)
+        {
+            // 画像幅
+            int width = BitConverter.ToInt32(bmpData.ImageWidth, 0);
+            // 画像高さ
+            int height = BitConverter.ToInt32(bmpData.ImageHeight, 0);
+
+            WriteableBitmap wbmp = new WriteableBitmap
+                (
+                width,
+                height,
+                bmpData.HorizontalResolutionDPI,
+                bmpData.VerticalResolutionDPI,
+                // System.Windows.Media.PixelFormats.Gray8, // グレースケール用
+                System.Windows.Media.PixelFormats.Bgr32, // RGB用
+                null // indexつきのbmp以外はnullで良い
+                );
+
+            // バイナリ配列データを用意する
+            // 1次元配列の中で行列が区別される
+
+            // 試作→上からグラデーションをかける
+            byte[] dataArr = new byte[width * height];
+            for (int row = 0; row < height; row++)
+            {
+                for (int col = 0; col < width; col++)
+                {
+                    int index = row * width         // 行
+                                            + col;  // 列
+
+                    dataArr[index] = (byte)(0xFF * row / (double)height - 1);
+                }
+            }
+
+            // 試作→そのまま入れ込む
+            // WritePixelsで範囲外エラー発生
+            // Int32Rect, wbmp作成時のwidth, heightも*3しないとだめかも
+            // 
+            //byte[] dataArr = new byte[width * height * 3];
+            //for (int i = 0; i < bmpData.Data.Length && i < dataArr.Length; i++)
+            //{
+            //    dataArr[i] = bmpData.Data[i];
+            //}
 
 
+            // wbmpに書き込む
+            wbmp.WritePixels
+            (
+            new System.Windows.Int32Rect(0, 0, width, height),
+            dataArr,
+            width,
+            0
+            );
+            return wbmp;
+        }
 
     }
 }

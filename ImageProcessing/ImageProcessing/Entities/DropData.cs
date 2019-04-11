@@ -17,8 +17,9 @@ namespace ImageProcessing.Entities
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        internal DropData()
-        { }
+        /// <remarks>for debugging</remarks>
+        //internal DropData()
+        //{ }
 
         /// <summary>
         /// コンストラクタ
@@ -34,11 +35,11 @@ namespace ImageProcessing.Entities
         /// </summary>
         /// <param name="filePath">ドロップされたファイルのパス</param>
         /// <param name="imageData">対象ファイル</param>
-        internal DropData(string filePath, WriteableBitmap imageData)
-        {
-            FilePath = filePath;
-            ImageData = imageData;
-        }
+        //internal DropData(string filePath, WriteableBitmap imageData)
+        //{
+        //    FilePath = filePath;
+        //    ImageData = imageData;
+        //}
 
         /// <summary>
         /// ドロップされたファイルパス
@@ -57,9 +58,9 @@ namespace ImageProcessing.Entities
         public WriteableBitmap ImageData
         {
             get;
-            private set;
+            set;
         }
-        
+
         /// <summary>
         /// BMPデータフォーマット部分
         /// </summary>
@@ -213,10 +214,15 @@ namespace ImageProcessing.Entities
             }
         }
 
-
+        /// <summary>
+        /// 1画素の色数
+        /// </summary>
+        /// <remarks>[28]~[29], RGBなら3色*1byte=24bit, グレースケールなら1色*1byte</remarks>
         private byte[] _pixel = new byte[2];
 
-
+        /// <summary>
+        /// 1画素の色数
+        /// </summary>
         public byte[] Pixel
         {
             get
@@ -225,10 +231,15 @@ namespace ImageProcessing.Entities
             }
         }
 
-
+        /// <summary>
+        /// 圧縮形式
+        /// </summary>
+        /// <remarks>[30]~[33]</remarks>
         private byte[] _compressionStyle = new byte[4];
 
-
+        /// <summary>
+        /// 圧縮形式
+        /// </summary>
         public byte[] CompressionStyle
         {
             get
@@ -237,10 +248,15 @@ namespace ImageProcessing.Entities
             }
         }
 
-
+        /// <summary>
+        /// 圧縮サイズ(byte)
+        /// </summary>
+        /// <remarks>[30]~[33]</remarks>
         private byte[] _compressionSize = new byte[4];
 
-
+        /// <summary>
+        /// 圧縮サイズ(byte)
+        /// </summary>
         public byte[] CompressionSize
         {
             get
@@ -249,34 +265,52 @@ namespace ImageProcessing.Entities
             }
         }
 
+        // (DPI*1000)/25.4=DPM
+        // 1インチ=25.4mmのため
 
-        private byte[] _horizontalResolution = new byte[4];
+        /// <summary>
+        /// 水平解像度(dot/m)
+        /// </summary>
+        /// <remarks>[38]~[41]</remarks>
+        private byte[] _horizontalResolutionDPM = new byte[4];
 
-
-        public byte[] HorizontalResolution
+        /// <summary>
+        /// 水平解像度(dot/m)
+        /// </summary>
+        public byte[] HorizontalResolutionDPM
         {
             get
             {
-                return _horizontalResolution;
+                return _horizontalResolutionDPM;
             }
         }
 
+        /// <summary>
+        /// 垂直解像度(dot/m)
+        /// </summary>
+        /// <remarks>[42]~[45]</remarks>
+        private byte[] _verticalResolutionDPM = new byte[4];
 
-        private byte[] _verticalResolution = new byte[4];
-
-
-        public byte[] VerticalResolution
+        /// <summary>
+        /// 垂直解像度(dot/m)
+        /// </summary>
+        public byte[] VerticalResolutionDPM
         {
             get
             {
-                return _verticalResolution;
+                return _verticalResolutionDPM;
             }
         }
 
-
+        /// <summary>
+        /// 色数
+        /// </summary>
+        /// <remarks>[46]~[49], 0の場合は全色を使用</remarks>
         private byte[] _color = new byte[4];
 
-
+        /// <summary>
+        /// 色数
+        /// </summary>
         public byte[] Color
         {
             get
@@ -285,11 +319,15 @@ namespace ImageProcessing.Entities
             }
         }
 
-
-
+        /// <summary>
+        /// 重要色数
+        /// </summary>
+        /// <remarks>[50]~[53], 0の場合は全色を使用</remarks>
         private byte[] _importantColor = new byte[4];
 
-
+        /// <summary>
+        /// 重要色数
+        /// </summary>
         public byte[] ImportantColor
         {
             get
@@ -298,14 +336,58 @@ namespace ImageProcessing.Entities
             }
         }
 
-
+        /// <summary>
+        /// データ部
+        /// </summary>
+        /// <remarks>[55]~, 作成時には長さが不明なので使用時にnewする</remarks>
         public byte[] Data
         {
             get;
             set;
         }
-        
-        
+
+        /// <summary>
+        /// BMP画像から取得した水平解像度(dot/inch)
+        /// </summary>
+        /// <remarks>BMPファイルのバイナリデータにある解像度はDPM</remarks>
+        private float _horizontalResolutionDPI = 0;
+
+        /// <summary>
+        /// 水平解像度(dot/inch)
+        /// </summary>
+        public float HorizontalResolutionDPI
+        {
+            get
+            {
+                return _horizontalResolutionDPI;
+            }
+            set
+            {
+                _horizontalResolutionDPI = value;
+            }
+        }
+
+
+        /// <summary>
+        /// BMP画像から取得した垂直解像度(dot/inch)
+        /// </summary>
+        /// <remarks>BMPファイルのバイナリデータにある解像度はDPM</remarks>
+        private float _verticalResolutionDPI = 0;
+
+        /// <summary>
+        /// BMP画像の垂直解像度(dot/inch)
+        /// </summary>
+        public float VerticalResolutionDPI
+        {
+            get
+            {
+                return _verticalResolutionDPI;
+            }
+            set
+            {
+                _verticalResolutionDPI = value;
+            }
+        }
 
     }
 }

@@ -188,11 +188,11 @@ namespace BMPOpen
             byte[] compressionSize = (new ArraySegment<byte>(bitmapArr, 34, 4)).Array;
             splitBitmapArr.Add(compressionSize);
 
-            // [38]~[41]は水平解像度 ppm*(px/m)
+            // [38]~[41]は水平解像度 ppm (px/m)
             byte[] horizontalResolution = (new ArraySegment<byte>(bitmapArr, 38, 4)).Array;
             splitBitmapArr.Add(horizontalResolution);
 
-            // [42]~[45]は垂直解像度 ppm*(px/m)
+            // [42]~[45]は垂直解像度 ppm (px/m)
             byte[] verticalResolution = (new ArraySegment<byte>(bitmapArr, 42, 4)).Array;
             splitBitmapArr.Add(verticalResolution);
 

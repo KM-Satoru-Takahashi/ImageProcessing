@@ -30,7 +30,7 @@ namespace ImageProcessing.ViewModel
         /// コンストラクタ
         /// </summary>
         /// <remarks>アクセスは初回実行時publicでないと実行時エラー</remarks>
-        internal MainWindowViewModel()
+        public MainWindowViewModel()
         {
             Initialize();
             _dropFiles = new ObservableCollection<Entities.DropData>();

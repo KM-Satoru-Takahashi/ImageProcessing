@@ -49,6 +49,7 @@ namespace ImageProcessing.Model
         {
             _vm = vm;
             _imageManager = new ImageManager(this);
+            _dropDatas = new List<DropData>();
         }
 
         /// <summary>
@@ -96,6 +97,9 @@ namespace ImageProcessing.Model
             // 対象ファイルパスから画像オブジェクトを生成して内部リストに保持する
             CreateDropData(targetFileList);
 
+            // テストコード
+            _dropDatas = _imageManager.GetBitmapDropData(targetFileList);
+
             return _dropDatas;
         }
 
@@ -119,7 +123,6 @@ namespace ImageProcessing.Model
             }
         }
 
-
         /// <summary>
         /// ドロップされたファイルから対象のファイルパスのみを取得する
         /// </summary>
@@ -142,7 +145,6 @@ namespace ImageProcessing.Model
 
             return targetFilePathList;
         }
-
 
         /// <summary>
         /// IDropInfoをDataObjectに変換する
