@@ -265,7 +265,8 @@ namespace ImageProcessing.Model
                 bmpData.HorizontalResolutionDPI,
                 bmpData.VerticalResolutionDPI,
                 // System.Windows.Media.PixelFormats.Gray8, // グレースケール用
-                System.Windows.Media.PixelFormats.Bgr32, // RGB用
+                // System.Windows.Media.PixelFormats.Bgr32, // RGB用
+                System.Windows.Media.PixelFormats.Pbgra32, // BGRA32用
                 null // indexつきのbmp以外はnullで良い
                 );
 
@@ -273,35 +274,39 @@ namespace ImageProcessing.Model
             // 1次元配列の中で行列が区別される
 
             // 試作→上からグラデーションをかける
-            byte[] dataArr = new byte[width * height];
-            for (int row = 0; row < height; row++)
-            {
-                for (int col = 0; col < width; col++)
-                {
-                    int index = row * width         // 行
-                                            + col;  // 列
-
-                    dataArr[index] = (byte)(0xFF * row / (double)height - 1);
-                }
-            }
-
-            // 試作→そのまま入れ込む
-            // WritePixelsで範囲外エラー発生
-            // Int32Rect, wbmp作成時のwidth, heightも*3しないとだめかも
-            // 
-            //byte[] dataArr = new byte[width * height * 3];
-            //for (int i = 0; i < bmpData.Data.Length && i < dataArr.Length; i++)
+            //byte[] dataArr = new byte[width * height];
+            //for (int row = 0; row < height; row++)
             //{
-            //    dataArr[i] = bmpData.Data[i];
+            //    for (int col = 0; col < width; col++)
+            //    {
+            //        int index = row * width         // 行
+            //                                + col;  // 列
+
+            //        dataArr[index] = (byte)(0xFF * row / (double)height - 1);
+            //    }
             //}
 
+            // そのまま入れ込む
+            byte[] dataArr = new byte[width * height * 4];
+            // dataArr[4n-1]を常に0にするためのカウンタ
+            int count = 0;
+            for (int i = 0; i < bmpData.Data.Length && i < dataArr.Length; i += 3)　// もとはRGBなので3ずつ値を増やす
+            {
+                // dataArr[i] = bmpData.Data[i]; // 直入れ
+                dataArr[i + count] = bmpData.Data[i];           // B
+                dataArr[i + 1 + count] = bmpData.Data[i + 1];   // G
+                dataArr[i + 2 + count] = bmpData.Data[i + 2];   // R
+                // Alpha係数は0ほど透明(不可視), 255が不透明(可視)なので255を指定しておく
+                dataArr[i + 3 + count] = 255; // Aは値定義されてない
+                count++;
+            }
 
             // wbmpに書き込む
             wbmp.WritePixels
             (
             new System.Windows.Int32Rect(0, 0, width, height),
             dataArr,
-            width,
+            width * 4,
             0
             );
             return wbmp;

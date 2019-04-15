@@ -70,7 +70,7 @@ namespace ImageProcessing.Model
             var files = dataObj.GetFileDropList().Cast<string>();
 
             // 指定の拡張子で終わっているファイルであればdropを許可
-            result = files.Any(fname => fname.EndsWith(TARGET_EXTENSION));
+            result = files.Any(fname => fname.ToLower().EndsWith(TARGET_EXTENSION));
 
             return result;
         }

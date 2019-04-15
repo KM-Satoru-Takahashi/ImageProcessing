@@ -24,22 +24,10 @@ namespace ImageProcessing.Entities
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        /// <remarks>For Debugging</remarks>
         internal DropData(string path)
         {
             FilePath = path;
         }
-
-        /// <summary>
-        /// コンストラクタ
-        /// </summary>
-        /// <param name="filePath">ドロップされたファイルのパス</param>
-        /// <param name="imageData">対象ファイル</param>
-        //internal DropData(string filePath, WriteableBitmap imageData)
-        //{
-        //    FilePath = filePath;
-        //    ImageData = imageData;
-        //}
 
         /// <summary>
         /// ドロップされたファイルパス
@@ -53,8 +41,6 @@ namespace ImageProcessing.Entities
         /// <summary>
         /// 画像ファイル情報
         /// </summary>
-        /// <remarks>これは別クラスにしたほうがいいかも
-        /// 最後までWriteableBitmap作るのに必要な値がわからないのから作れないので</remarks>
         public WriteableBitmap ImageData
         {
             get;
@@ -64,7 +50,7 @@ namespace ImageProcessing.Entities
         /// <summary>
         /// BMPデータフォーマット部分
         /// </summary>
-        /// <remarks>[0]~[1], ビッグエンディアン, 0x42-0x4d->BM</remarks>
+        /// <remarks>[0]~[1], ビッグエンディアン, 0x42_0x4d->BM</remarks>
         private byte[] _dataFormat = new Byte[2];
 
         /// <summary>
