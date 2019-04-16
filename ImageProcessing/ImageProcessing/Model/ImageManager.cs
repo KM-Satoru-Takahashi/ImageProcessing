@@ -85,6 +85,16 @@ namespace ImageProcessing.Model
         }
 
         /// <summary>
+        /// バイナリデータの右回転処理
+        /// </summary>
+        /// <param name="dropData"></param>
+        /// <returns>右回転した画像データのWriteableBMP形式</returns>
+        internal WriteableBitmap RightRotate(DropData dropData)
+        {
+            return null;
+        }
+
+        /// <summary>
         /// 与えられたファイルパスのBMPファイルをバイナリデータとして取得する
         /// </summary>
         /// <param name="filePath"></param>

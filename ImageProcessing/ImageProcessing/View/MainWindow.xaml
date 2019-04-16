@@ -6,6 +6,8 @@
         xmlns:local="clr-namespace:ImageProcessing"
         xmlns:vm="clr-namespace:ImageProcessing.ViewModel"
         xmlns:dd="urn:gong-wpf-dragdrop"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity" 
+        xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions" 
         mc:Ignorable="d"
         Title="ImageProcessing" Height="450" Width="800"
         AllowDrop="True"       
@@ -14,24 +16,41 @@
     <Window.DataContext>
         <vm:MainWindowViewModel/>
     </Window.DataContext>
-    
-    <!--ドロップされたファイルの処理-->
-    <!--ファイル情報を有するプロパティを指定-->
-    <!--dd:DragDrop.DropHandler="{Binding}でvmへのバインディングを指定-->
-    <ListBox ItemsSource="{Binding Path=Files}"
+    <Grid>
+        <!--回転ボタン配置-->
+        <Grid Margin="0,0,0,374" Background="Aquamarine" Height="50">
+            <Button Content="{Binding Path=RightRotate90ButtonName}" HorizontalAlignment="Left" Margin="90,10,0,0" VerticalAlignment="Top" Width="75" 
+                    Command="{Binding RightRotateCommand}" />
+            <Button Content="{Binding Path=LeftRotate90ButtonName}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="75"
+                    Command="{Binding LeftRotateCommand}" />
+
+        </Grid>
+        <!--クリックイベントを拾いたいのでグリッドで括る-->
+        <!--透明背景を設定しておく-->
+        <Grid Background="Transparent" Margin="0,50,0,0">
+            <!--ドロップされたファイルの処理-->
+            <!--ファイル情報を有するプロパティを指定-->
+            <!--dd:DragDrop.DropHandler="{Binding}でvmへのバインディングを指定-->
+            <ListBox
+             ItemsSource="{Binding Path=Files}"
              dd:DragDrop.IsDropTarget="True"
              dd:DragDrop.DropHandler="{Binding}" 
              >
-        <!--画面に表示するファイルパスを有するプロパティを指定-->
-        <ListBox.ItemTemplate>
-            <DataTemplate>
-                <StackPanel>
-                    <TextBlock Text="{Binding FilePath}" />
-                    <Image Source="{Binding ImageData}"/>
-                </StackPanel>
-            </DataTemplate>
-        </ListBox.ItemTemplate>
-    </ListBox>
+                <!--画面に表示するファイルパスを有するプロパティを指定-->
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <ContentControl>
+                            <StackPanel>
+                                <TextBlock Text="{Binding FilePath}" />
+                                <Image Source="{Binding ImageData}"/>
+                            </StackPanel>
+                            <i:Interaction.Triggers>
 
-
+                            </i:Interaction.Triggers>
+                        </ContentControl>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+    </Grid>
 </Window>

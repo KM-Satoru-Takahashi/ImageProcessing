@@ -17,13 +17,6 @@ namespace ImageProcessing.Entities
         /// <summary>
         /// コンストラクタ
         /// </summary>
-        /// <remarks>for debugging</remarks>
-        //internal DropData()
-        //{ }
-
-        /// <summary>
-        /// コンストラクタ
-        /// </summary>
         internal DropData(string path)
         {
             FilePath = path;
@@ -352,7 +345,6 @@ namespace ImageProcessing.Entities
                 _horizontalResolutionDPI = value;
             }
         }
-
 
         /// <summary>
         /// BMP画像から取得した垂直解像度(dot/inch)

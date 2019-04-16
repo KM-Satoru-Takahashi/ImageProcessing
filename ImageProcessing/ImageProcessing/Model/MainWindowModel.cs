@@ -8,11 +8,18 @@ using ImageProcessing.Entities;
 using System.Windows;
 using System.IO;
 
+using System.Drawing;
+using System.Windows.Media.Imaging;
+
 using GongSolutions.Wpf.DragDrop;
 
 
 namespace ImageProcessing.Model
 {
+    /// <summary>
+    /// メイン画面Model
+    /// </summary>
+    /// <remarks>バインディング関連クラス以外は全てここから呼ぶべき</remarks>
     internal class MainWindowModel
     {
         #region field
@@ -101,6 +108,21 @@ namespace ImageProcessing.Model
             _dropDatas = _imageManager.GetBitmapDropData(targetFileList);
 
             return _dropDatas;
+        }
+
+        /// <summary>
+        /// 画像右回転処理実行メソッド
+        /// </summary>
+        /// <returns>右回転した画像のWriteableBMP形式</returns>
+        /// <remarks>処理の実体は画処理クラスに定義</remarks>
+        internal WriteableBitmap RightRotate()
+        {
+            if(_imageManager!=null)
+            {
+                return _imageManager.RightRotate();
+            }
+
+            return null;
         }
 
         /// <summary>
