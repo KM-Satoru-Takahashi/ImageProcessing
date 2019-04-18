@@ -45,6 +45,11 @@ namespace ImageProcessing.ViewModel
         /// </summary>
         private LeftRotateCommand _leftRotate = null;
 
+        /// <summary>
+        /// D&Dで表示したWBMPオブジェクト(button)に対するコマンド
+        /// </summary>
+        private WriteableBitmapCommand _wbmp = null;
+
         #endregion
 
         #region プロパティ
@@ -109,8 +114,27 @@ namespace ImageProcessing.ViewModel
 
         #endregion
 
+        #region WriteableBitmapオブジェクト表示ボタン
+
         /// <summary>
-        /// ドロップされたオブジェクトのパスを保存する
+        /// WriteableBitmapオブジェクト表示ボタンコマンド
+        /// </summary>
+        public WriteableBitmapCommand WriteableBitmapCommand
+        {
+            get
+            {
+                return _wbmp;
+            }
+            private set
+            {
+                _wbmp = value;
+            }
+        }
+
+        #endregion
+
+        /// <summary>
+        /// ドロップされたオブジェクトを保存する
         /// </summary>
         public ObservableCollection<Entities.DropData> Files
         {
@@ -141,7 +165,7 @@ namespace ImageProcessing.ViewModel
             _viewManager = new ButtonViewManager();
             _rightRotate = new RightRotateCommand(RightRotate, IsRightRotateEnabled);
             _leftRotate = new LeftRotateCommand(LeftRotate, IsLeftRotateEnabled);
-
+            _wbmp = new WriteableBitmapCommand(WBMPImageProcessing, IsWBMPEnabled);
         }
 
         #region 右回転ボタンのデリゲート登録メソッド
@@ -166,7 +190,8 @@ namespace ImageProcessing.ViewModel
         /// </summary>
         private void RightRotate()
         {
-
+            // テスト段階なのでとりあえずリストの0番目を渡す
+            _dropFiles[0].ImageData = _model.RightRotate(_dropFiles[0]);
         }
 
         #endregion
@@ -197,6 +222,30 @@ namespace ImageProcessing.ViewModel
         }
 
         #endregion
+
+        #region WriteableBitmap表示ボタンのデリゲート
+
+        /// <summary>
+        /// wbmp押下可否状態判定
+        /// </summary>
+        /// <returns>常にtrue</returns>
+        private bool IsWBMPEnabled()
+        {
+            return true;
+        }
+
+        /// <summary>
+        /// wbmpボタン押下時の処理
+        /// </summary>
+        private void WBMPImageProcessing()
+        {
+            // テスト段階なのでとりあえずリストの0番目を渡す
+            _dropFiles[0].ImageData = _model.RightRotate(_dropFiles[0]);
+        }
+
+        #endregion
+
+        #region ドラッグアンドドロップ時の処理
 
         /// <summary>
         /// Window上にドラッグ状態でマウスオーバーされた際の処理
@@ -256,7 +305,7 @@ namespace ImageProcessing.ViewModel
             return null;
         }
 
-
+        #endregion
 
     }
 }

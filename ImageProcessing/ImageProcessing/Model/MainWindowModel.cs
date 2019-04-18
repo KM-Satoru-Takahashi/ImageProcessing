@@ -115,11 +115,11 @@ namespace ImageProcessing.Model
         /// </summary>
         /// <returns>右回転した画像のWriteableBMP形式</returns>
         /// <remarks>処理の実体は画処理クラスに定義</remarks>
-        internal WriteableBitmap RightRotate()
+        internal WriteableBitmap RightRotate(Entities.DropData dropData)
         {
             if(_imageManager!=null)
             {
-                return _imageManager.RightRotate();
+                return _imageManager.RightRotate(dropData);
             }
 
             return null;

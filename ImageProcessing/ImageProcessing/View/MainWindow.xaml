@@ -18,7 +18,7 @@
     </Window.DataContext>
     <Grid>
         <!--回転ボタン配置-->
-        <Grid Margin="0,0,0,374" Background="Aquamarine" Height="50">
+        <Grid Margin="0,0,0,369" Background="Aquamarine">
             <Button Content="{Binding Path=RightRotate90ButtonName}" HorizontalAlignment="Left" Margin="90,10,0,0" VerticalAlignment="Top" Width="75" 
                     Command="{Binding RightRotateCommand}" />
             <Button Content="{Binding Path=LeftRotate90ButtonName}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="75"
@@ -42,7 +42,13 @@
                         <ContentControl>
                             <StackPanel>
                                 <TextBlock Text="{Binding FilePath}" />
-                                <Image Source="{Binding ImageData}"/>
+                                <!--クリック時のイベントを拾いたいのでボタンにして画像を表示する-->
+                                <!--RelativeSourceでFilesの一つ上のwindow.DataContextを指定しWriteableBitmapCommandにつなげる-->
+                                <Button Background="Transparent" BorderBrush="Transparent" Foreground="Transparent"
+                                        Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type Window}}, Path=DataContext.WriteableBitmapCommand}">
+                                    <!--表示する画像はFiles.ImageData-->
+                                    <Image Source="{Binding Path=ImageData}" />
+                                </Button>
                             </StackPanel>
                             <i:Interaction.Triggers>
 
