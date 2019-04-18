@@ -9,12 +9,13 @@ namespace ImageProcessing.Model
     /// <summary>
     /// MainWidonwViewに表示するボタンの状態を管理する
     /// </summary>
+    /// <remarks>Background="Aquamarine"のグリッド部分</remarks>
     internal class ButtonViewManager
     {
         /// <summary>
         /// 右回転ボタン表示文言
         /// </summary>
-        private readonly string _rightRotate90 = "90度右回転";
+        private readonly string RIGHT_ROTATE_90 = "90度右回転";
 
         /// <summary>
         /// 右回転ボタン表示文言
@@ -23,7 +24,7 @@ namespace ImageProcessing.Model
         {
             get
             {
-                return _rightRotate90;
+                return RIGHT_ROTATE_90;
             }
         }
 
@@ -50,7 +51,7 @@ namespace ImageProcessing.Model
         /// <summary>
         /// 左回転ボタン
         /// </summary>
-        private readonly string _leftRotate90 = "90度左回転";
+        private readonly string LEFT_ROTATE_90 = "90度左回転";
 
         /// <summary>
         /// 左回転ボタン
@@ -59,7 +60,7 @@ namespace ImageProcessing.Model
         {
             get
             {
-                return _leftRotate90;
+                return LEFT_ROTATE_90;
             }
         }
 

@@ -9,7 +9,7 @@
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity" 
         xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions" 
         mc:Ignorable="d"
-        Title="ImageProcessing" Height="450" Width="800"
+        Title="ImageProcessing" Height="600" Width="800"
         AllowDrop="True"       
         >
     <!--VMにバインディングする-->
@@ -18,16 +18,62 @@
     </Window.DataContext>
     <Grid>
         <!--回転ボタン配置-->
-        <Grid Margin="0,0,0,369" Background="Aquamarine">
+        <Grid Margin="0,0,0,519" Background="Aquamarine" >
             <Button Content="{Binding Path=RightRotate90ButtonName}" HorizontalAlignment="Left" Margin="90,10,0,0" VerticalAlignment="Top" Width="75" 
                     Command="{Binding RightRotateCommand}" />
             <Button Content="{Binding Path=LeftRotate90ButtonName}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="75"
                     Command="{Binding LeftRotateCommand}" />
 
         </Grid>
+
+        <!--クリックした座標の情報表示と編集枠の配置-->
+        <Grid  Margin="0,50,0,409" Background="Turquoise" ShowGridLines="True">
+            <!--表を定義-->
+            <!--横行-->
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+
+            <!--縦列-->
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <!--値の位置を定義-->
+            <!--Row = 0-->
+            <!--座標-->
+            <Label Content="{Binding XPosition}" Grid.Row="0" Grid.Column="0" HorizontalContentAlignment="Right"/>
+            <Label Content="{Binding XCoordinate}" Grid.Row="0" Grid.Column="1" HorizontalContentAlignment="Center"/>
+            <Label Content="{Binding YPosition}" Grid.Row="0" Grid.Column="2" HorizontalContentAlignment="Right"/>
+            <Label Content="{Binding YCoordinate}" Grid.Row="0" Grid.Column="3" HorizontalContentAlignment="Center"/>
+            <!--RGBAラベル-->
+            <Label Content="{Binding Red}" Grid.Row="0" Grid.Column="4" HorizontalContentAlignment="Center"/>
+            <Label Content="{Binding Green}" Grid.Row="0" Grid.Column="5" HorizontalContentAlignment="Center"/>
+            <Label Content="{Binding Blue}" Grid.Row="0" Grid.Column="6" HorizontalContentAlignment="Center"/>
+            <Label Content="{Binding Alpha}" Grid.Row="0" Grid.Column="7" HorizontalContentAlignment="Center"/>
+            <!--現在の画素値(Row = 1)-->
+            <Label Content="{Binding OldPixel}" Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" HorizontalContentAlignment="Right"/>
+            <Label Content="{Binding OldRed}" Grid.Row="1" Grid.Column="4" HorizontalContentAlignment="Center"/>
+            <Label Content="{Binding OldGreen}" Grid.Row="1" Grid.Column="5" HorizontalContentAlignment="Center"/>
+            <Label Content="{Binding OldBlue}" Grid.Row="1" Grid.Column="6" HorizontalContentAlignment="Center"/>
+            <Label Content="{Binding OldAlpha}" Grid.Row="1" Grid.Column="7" HorizontalContentAlignment="Center"/>
+            <!--変更後の画素値(Row = 2)-->
+            <Label Content="{Binding NewPixel}" Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" HorizontalContentAlignment="Right"/>
+            <Button Content="{Binding Update}" Grid.Row="2" Grid.Column="8"/>
+        </Grid>
+
         <!--クリックイベントを拾いたいのでグリッドで括る-->
         <!--透明背景を設定しておく-->
-        <Grid Background="Transparent" Margin="0,50,0,0">
+        <Grid Background="Transparent" Margin="0,160,0,0">
             <!--ドロップされたファイルの処理-->
             <!--ファイル情報を有するプロパティを指定-->
             <!--dd:DragDrop.DropHandler="{Binding}でvmへのバインディングを指定-->
@@ -45,7 +91,8 @@
                                 <!--クリック時のイベントを拾いたいのでボタンにして画像を表示する-->
                                 <!--RelativeSourceでFilesの一つ上のwindow.DataContextを指定しWriteableBitmapCommandにつなげる-->
                                 <Button Background="Transparent" BorderBrush="Transparent" Foreground="Transparent"
-                                        Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type Window}}, Path=DataContext.WriteableBitmapCommand}">
+                                        Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type Window}}, Path=DataContext.WriteableBitmapCommand}"
+                                        CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}">
                                     <!--表示する画像はFiles.ImageData-->
                                     <Image Source="{Binding Path=ImageData}" />
                                 </Button>

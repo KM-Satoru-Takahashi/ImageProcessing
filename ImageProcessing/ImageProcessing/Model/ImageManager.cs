@@ -78,7 +78,6 @@ namespace ImageProcessing.Model
                         dropDatas.Add(data);
                     }
                 }
-
             }
 
             return dropDatas;
@@ -93,6 +92,19 @@ namespace ImageProcessing.Model
         {
             return null;
         }
+
+
+        internal int GetTargetBinary()
+        {
+            return 0;
+        }
+
+
+        internal PixelData CreateTargetPixelData()
+        {
+            return null;
+        }
+
 
         /// <summary>
         /// 与えられたファイルパスのBMPファイルをバイナリデータとして取得する
@@ -298,7 +310,7 @@ namespace ImageProcessing.Model
 
             // そのまま入れ込む
             byte[] dataArr = new byte[width * height * 4];
-            // dataArr[4n-1]を常に0にするためのカウンタ
+            // dataArr[4n-1]を常に定数にするためのカウンタ
             int count = 0;
             for (int i = 0; i < bmpData.Data.Length && i < dataArr.Length; i += 3)　// もとはRGBなので3ずつ値を増やす
             {

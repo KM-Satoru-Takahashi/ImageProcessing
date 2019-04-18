@@ -31,6 +31,11 @@ namespace ImageProcessing.ViewModel
         private ButtonViewManager _viewManager = null;
 
         /// <summary>
+        /// 画素コントロール部分表示文言管理クラス
+        /// </summary>
+        private PixelDataViewManager _pxlDataViewMng = null;
+
+        /// <summary>
         /// ドロップファイルエンティティ
         /// </summary>
         ObservableCollection<Entities.DropData> _dropFiles = null;
@@ -49,6 +54,11 @@ namespace ImageProcessing.ViewModel
         /// D&Dで表示したWBMPオブジェクト(button)に対するコマンド
         /// </summary>
         private WriteableBitmapCommand _wbmp = null;
+
+        /// <summary>
+        /// 画像クリック時に表示される画像情報
+        /// </summary>
+        private Entities.PixelData _pixelData = null;
 
         #endregion
 
@@ -114,6 +124,275 @@ namespace ImageProcessing.ViewModel
 
         #endregion
 
+        #region 画素値変更部分固定文言
+
+        /// <summary>
+        /// X座標
+        /// </summary>
+        public string XPosition
+        {
+            get
+            {
+                return _pxlDataViewMng.XPosition;
+            }
+        }
+
+        /// <summary>
+        /// Y座標
+        /// </summary>
+        public string YPosition
+        {
+            get
+            {
+                return _pxlDataViewMng.YPosition;
+            }
+        }
+
+        /// <summary>
+        /// 現在の画素値
+        /// </summary>
+        public string OldPixel
+        {
+            get
+            {
+                return _pxlDataViewMng.OldPixel;
+            }
+        }
+
+        /// <summary>
+        /// 新しい画素値
+        /// </summary>
+        public string NewPixel
+        {
+            get
+            {
+                return _pxlDataViewMng.NewPixel;
+            }
+        }
+
+        /// <summary>
+        /// "R"表示
+        /// </summary>
+        public string Red
+        {
+            get
+            {
+                return _pxlDataViewMng.Red;
+            }
+        }
+
+        /// <summary>
+        /// "G"表示
+        /// </summary>
+        public string Green
+        {
+            get
+            {
+                return _pxlDataViewMng.Green;
+            }
+        }
+
+        /// <summary>
+        /// "B"表示
+        /// </summary>
+        public string Blue
+        {
+            get
+            {
+                return _pxlDataViewMng.Blue;
+            }
+        }
+
+        /// <summary>
+        /// "A"表示
+        /// </summary>
+        public string Alpha
+        {
+            get
+            {
+                return _pxlDataViewMng.Alpha;
+            }
+        }
+
+        /// <summary>
+        /// "更新"表示
+        /// </summary>
+        public string Update
+        {
+            get
+            {
+                return _pxlDataViewMng.Update;
+            }
+        }
+
+
+        #endregion
+
+        #region 画素情報
+
+        /// <summary>
+        /// 画素のX座標
+        /// </summary>
+        public int XCoordinate
+        {
+            get
+            {
+                return _pixelData.XCoordinate;
+            }
+            set
+            {
+                _pixelData.XCoordinate = value;
+                RaisePropertyChanged("XCoordinate");
+            }
+        }
+
+        /// <summary>
+        /// 画素のY座標
+        /// </summary>
+        public int YCoordinate
+        {
+            get
+            {
+                return _pixelData.YCoordinate;
+            }
+            set
+            {
+                _pixelData.YCoordinate = value;
+                RaisePropertyChanged("YCoordinate");
+            }
+        }
+
+
+        /// <summary>
+        /// 現在のR値
+        /// </summary>
+        public byte OldRed
+        {
+            get
+            {
+                return _pixelData.OldRed;
+            }
+            set
+            {
+                _pixelData.OldRed = value;
+                RaisePropertyChanged("OldRed");
+            }
+        }
+
+        /// <summary>
+        /// 現在のG値
+        /// </summary>
+        public byte OldGreen
+        {
+            get
+            {
+                return _pixelData.OldGreen;
+            }
+            set
+            {
+                _pixelData.OldGreen = value;
+                RaisePropertyChanged("OldGreen");
+            }
+        }
+
+        /// <summary>
+        /// 現在のB値
+        /// </summary>
+        public byte OldBlue
+        {
+            get
+            {
+                return _pixelData.OldBlue;
+            }
+            set
+            {
+                _pixelData.OldBlue = value;
+                RaisePropertyChanged("OldBlue");
+            }
+        }
+
+        /// <summary>
+        /// 現在のA値
+        /// </summary>
+        public byte OldAlpha
+        {
+            get
+            {
+                return _pixelData.OldAlpha;
+            }
+            set
+            {
+                _pixelData.OldAlpha = value;
+                RaisePropertyChanged("OldAlpha");
+            }
+        }
+
+        /// <summary>
+        /// 更新後のR値
+        /// </summary>
+        public byte NewRed
+        {
+            get
+            {
+                return _pixelData.NewRed;
+            }
+            set
+            {
+                _pixelData.NewRed = value;
+                RaisePropertyChanged("NewRed");
+            }
+        }
+
+        /// <summary>
+        /// 更新後のG値
+        /// </summary>
+        public byte NewGreen
+        {
+            get
+            {
+                return _pixelData.NewGreen;
+            }
+            set
+            {
+                _pixelData.NewGreen = value;
+                RaisePropertyChanged("NewGreen");
+            }
+        }
+
+        /// <summary>
+        /// 更新後のB値
+        /// </summary>
+        public byte NewBlue
+        {
+            get
+            {
+                return _pixelData.NewBlue;
+            }
+            set
+            {
+                _pixelData.NewBlue = value;
+                RaisePropertyChanged("NewBlue");
+            }
+        }
+
+        /// <summary>
+        /// 更新後のA値
+        /// </summary>
+        public byte NewAlpha
+        {
+            get
+            {
+                return _pixelData.NewAlpha;
+            }
+            set
+            {
+                _pixelData.NewAlpha = value;
+                RaisePropertyChanged("NewAlpha");
+            }
+        }
+
+        #endregion
+
         #region WriteableBitmapオブジェクト表示ボタン
 
         /// <summary>
@@ -163,9 +442,11 @@ namespace ImageProcessing.ViewModel
             _dropFiles = new ObservableCollection<Entities.DropData>();
             _model = new MainWindowModel(this);
             _viewManager = new ButtonViewManager();
+            _pxlDataViewMng = new PixelDataViewManager();
+            _pixelData = new Entities.PixelData();
             _rightRotate = new RightRotateCommand(RightRotate, IsRightRotateEnabled);
             _leftRotate = new LeftRotateCommand(LeftRotate, IsLeftRotateEnabled);
-            _wbmp = new WriteableBitmapCommand(WBMPImageProcessing, IsWBMPEnabled);
+            _wbmp = new WriteableBitmapCommand(param => { WBMPImageProcessing(param); }, IsWBMPEnabled);
         }
 
         #region 右回転ボタンのデリゲート登録メソッド
@@ -236,12 +517,24 @@ namespace ImageProcessing.ViewModel
 
         /// <summary>
         /// wbmpボタン押下時の処理
+        /// ウィンドウを新規に表示する
         /// </summary>
-        private void WBMPImageProcessing()
+        private void WBMPImageProcessing(object sender)
         {
             // テスト段階なのでとりあえずリストの0番目を渡す
-            _dropFiles[0].ImageData = _model.RightRotate(_dropFiles[0]);
+            _pixelData = _model.GetPixelInfo(_dropFiles[0], sender);
+
+            // マウス座標取得
+            DependencyObject dependencyObject = (DependencyObject)sender;
+            System.Windows.Controls.Button button = dependencyObject as System.Windows.Controls.Button;
+            // クリックしたボタン上のマウス座標を取得する
+            Point pt = Mouse.GetPosition(button);
+
+
+            // debug
+            OldRed++;
         }
+
 
         #endregion
 
@@ -288,21 +581,6 @@ namespace ImageProcessing.ViewModel
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// IDropInfo.DataをDataObjectに変換する
-        /// </summary>
-        /// <param name="dropInfo"></param>
-        /// <returns></returns>
-        private DataObject GetDataObject(IDropInfo dropInfo)
-        {
-            if (dropInfo != null)
-            {
-                return (DataObject)dropInfo.Data;
-            }
-
-            return null;
         }
 
         #endregion

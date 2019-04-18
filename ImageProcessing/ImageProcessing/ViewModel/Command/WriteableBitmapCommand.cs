@@ -18,7 +18,7 @@ namespace ImageProcessing.ViewModel.Command
         /// </summary>
         /// <param name="execute">ボタン押下時関数</param>
         /// <param name="canExecute">ボタン押下可否判定関数</param>
-        public WriteableBitmapCommand(Action execute, Func<bool> canExecute)
+        public WriteableBitmapCommand(Action<object> execute, Func<bool> canExecute)
         {
             this.execute = execute;
             this.canExecute = canExecute;
@@ -27,7 +27,7 @@ namespace ImageProcessing.ViewModel.Command
         /// <summary>
         /// ボタン押下時実行関数
         /// </summary>
-        private Action execute;
+        private Action<object> execute;
 
         /// <summary>
         /// ボタン使用可否判定
@@ -67,7 +67,7 @@ namespace ImageProcessing.ViewModel.Command
         /// <remarks>VM側で実体を定義</remarks>
         public void Execute(object parameter)
         {
-            execute();
+            execute(parameter);
         }
     }
 }

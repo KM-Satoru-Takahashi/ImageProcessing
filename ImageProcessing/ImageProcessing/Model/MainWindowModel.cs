@@ -12,7 +12,7 @@ using System.Drawing;
 using System.Windows.Media.Imaging;
 
 using GongSolutions.Wpf.DragDrop;
-
+using System.Windows.Input;
 
 namespace ImageProcessing.Model
 {
@@ -33,6 +33,11 @@ namespace ImageProcessing.Model
         /// 画像管理クラス
         /// </summary>
         private ImageManager _imageManager = null;
+
+        /// <summary>
+        /// View上の情報取得クラス
+        /// </summary>
+        private ViewInfoAcquisition _viewInfoAcquisition = null;
 
         /// <summary>
         /// ドロップ操作を許可するファイルの拡張子
@@ -56,6 +61,7 @@ namespace ImageProcessing.Model
         {
             _vm = vm;
             _imageManager = new ImageManager(this);
+            _viewInfoAcquisition = new ViewInfoAcquisition();
             _dropDatas = new List<DropData>();
         }
 
@@ -115,15 +121,57 @@ namespace ImageProcessing.Model
         /// </summary>
         /// <returns>右回転した画像のWriteableBMP形式</returns>
         /// <remarks>処理の実体は画処理クラスに定義</remarks>
-        internal WriteableBitmap RightRotate(Entities.DropData dropData)
+        internal WriteableBitmap RightRotate(DropData dropData)
         {
-            if(_imageManager!=null)
+            if (_imageManager != null)
             {
                 return _imageManager.RightRotate(dropData);
             }
 
             return null;
         }
+
+        /// <summary>
+        /// WBMP画像の押下された位置の画素情報を取得する
+        /// </summary>
+        /// <param name="dropData"></param>
+        /// <param name="sender"></param>
+        /// <returns></returns>
+        internal PixelData GetPixelInfo(DropData dropData, object sender)
+        {
+            // マウス座標取得
+            DependencyObject dependencyObject = (DependencyObject)sender;
+            System.Windows.Controls.Button button = dependencyObject as System.Windows.Controls.Button;
+            // クリックしたボタン上のマウス座標を取得する
+            System.Windows.Point pt = Mouse.GetPosition(button);
+
+
+            // マウスの座標取得
+            _viewInfoAcquisition.GetMousePosition();
+
+            // 座標から該当する画素値がどれかを出す
+            _imageManager.GetTargetBinary();
+
+            // その画素値の情報を作って返す
+            _imageManager.CreateTargetPixelData();
+
+            return null;
+        }
+
+
+        internal bool SetPixelInfo()
+        {
+            // 引数検討必要
+
+            // imgManager側へ依頼する処理
+            // ・バイナリのどの位置か
+            // ・対象バイナリへ値のセット
+            // ・セット後の画像データ構築
+
+            return false;
+        }
+
+
 
         /// <summary>
         /// 画像ファイルパスから対応する画像オブジェクトの一覧を作成する
