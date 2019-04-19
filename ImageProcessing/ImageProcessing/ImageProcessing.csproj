@@ -76,6 +76,7 @@
     <Compile Include="Model\ViewInfoAcquisition.cs" />
     <Compile Include="ViewModel\Command\LeftRotateCommand.cs" />
     <Compile Include="ViewModel\Command\RightRotateCommand.cs" />
+    <Compile Include="ViewModel\Command\UpdateCommand.cs" />
     <Compile Include="ViewModel\Command\WriteableBitmapCommand.cs" />
     <Compile Include="ViewModel\MainWindowViewModel.cs" />
     <Compile Include="ViewModel\ViewModelBase.cs" />

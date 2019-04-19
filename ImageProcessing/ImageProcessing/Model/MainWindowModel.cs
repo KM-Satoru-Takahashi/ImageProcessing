@@ -139,39 +139,41 @@ namespace ImageProcessing.Model
         /// <returns></returns>
         internal PixelData GetPixelInfo(DropData dropData, object sender)
         {
-            // マウス座標取得
-            DependencyObject dependencyObject = (DependencyObject)sender;
-            System.Windows.Controls.Button button = dependencyObject as System.Windows.Controls.Button;
-            // クリックしたボタン上のマウス座標を取得する
-            System.Windows.Point pt = Mouse.GetPosition(button);
+            PixelData pixelData = new PixelData();
 
+            if (_viewInfoAcquisition == null || dropData == null || sender == null)
+            {
+                return pixelData;
+            }
+            // ターゲット上のマウス座標を取得
+            System.Windows.Point mousePoint = new System.Windows.Point();
 
-            // マウスの座標取得
-            _viewInfoAcquisition.GetMousePosition();
+            // 変換失敗時
+            // Point(0,0)では判断できない
+            if (_viewInfoAcquisition.GetMousePositionOnButton(sender, out mousePoint) == false)
+            {
+                return pixelData;
+            }
 
-            // 座標から該当する画素値がどれかを出す
-            _imageManager.GetTargetBinary();
+            // 座標から該当する画素値情報を取得する
+            pixelData = _imageManager.GetPixelInfo(dropData.ImageData, mousePoint);
 
-            // その画素値の情報を作って返す
-            _imageManager.CreateTargetPixelData();
+            return pixelData;
+        }
+
+        /// <summary>
+        /// 更新ボタン押下時に指示された画素情報を更新する
+        /// </summary>
+        /// <param name="pixelData"></param>
+        /// <returns></returns>
+        internal WriteableBitmap UpdatePixelInfo(WriteableBitmap updateData, PixelData pixelData)
+        {
+            // TODO: CheckDropdata みたいなメソッドを作ってupdateDataの正当性をここで担保してもいいかも
+            // TODO: ImageManagerにわたす前に他のメソッドでも汎用的に使える可能性があるので
+            _imageManager.UpdatePixelInfo(updateData, pixelData);
 
             return null;
         }
-
-
-        internal bool SetPixelInfo()
-        {
-            // 引数検討必要
-
-            // imgManager側へ依頼する処理
-            // ・バイナリのどの位置か
-            // ・対象バイナリへ値のセット
-            // ・セット後の画像データ構築
-
-            return false;
-        }
-
-
 
         /// <summary>
         /// 画像ファイルパスから対応する画像オブジェクトの一覧を作成する
@@ -189,7 +191,6 @@ namespace ImageProcessing.Model
             {
                 DropData dropData = new DropData(targetPath);
                 _dropDatas.Add(dropData);
-                // WriteableBitmap処理を_imageManagerに委ねるならコンストラクタをいじる
             }
         }
 

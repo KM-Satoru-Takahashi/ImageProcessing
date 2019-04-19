@@ -56,6 +56,11 @@ namespace ImageProcessing.ViewModel
         private WriteableBitmapCommand _wbmp = null;
 
         /// <summary>
+        /// 画像データ更新ボタンに対するコマンド
+        /// </summary>
+        private UpdateCommand _update = null;
+
+        /// <summary>
         /// 画像クリック時に表示される画像情報
         /// </summary>
         private Entities.PixelData _pixelData = null;
@@ -227,6 +232,19 @@ namespace ImageProcessing.ViewModel
 
 
         #endregion
+
+
+        public UpdateCommand UpdateCommand
+        {
+            get
+            {
+                return _update;
+            }
+            set
+            {
+                _update = value;
+            }
+        }
 
         #region 画素情報
 
@@ -446,10 +464,11 @@ namespace ImageProcessing.ViewModel
             _pixelData = new Entities.PixelData();
             _rightRotate = new RightRotateCommand(RightRotate, IsRightRotateEnabled);
             _leftRotate = new LeftRotateCommand(LeftRotate, IsLeftRotateEnabled);
-            _wbmp = new WriteableBitmapCommand(param => { WBMPImageProcessing(param); }, IsWBMPEnabled);
+            _update = new UpdateCommand(param => { UpdatePixelInfo(param); }, IsUpdateEnabled);
+            _wbmp = new WriteableBitmapCommand(param => { ShowPixelInfo(param); }, IsWBMPEnabled);
         }
 
-        #region 右回転ボタンのデリゲート登録メソッド
+        #region 右回転ボタンの登録メソッド
 
         /// <summary>
         /// 右回転ボタン押下可否状態判定
@@ -477,7 +496,7 @@ namespace ImageProcessing.ViewModel
 
         #endregion
 
-        #region 左回転ボタンのデリゲート登録メソッド
+        #region 左回転ボタンの登録メソッド
 
         /// <summary>
         /// 左回転ボタン押下可否状態判定
@@ -504,7 +523,7 @@ namespace ImageProcessing.ViewModel
 
         #endregion
 
-        #region WriteableBitmap表示ボタンのデリゲート
+        #region WriteableBitmap表示ボタンのメソッド
 
         /// <summary>
         /// wbmp押下可否状態判定
@@ -517,24 +536,46 @@ namespace ImageProcessing.ViewModel
 
         /// <summary>
         /// wbmpボタン押下時の処理
-        /// ウィンドウを新規に表示する
         /// </summary>
-        private void WBMPImageProcessing(object sender)
+        private void ShowPixelInfo(object sender)
         {
             // テスト段階なのでとりあえずリストの0番目を渡す
             _pixelData = _model.GetPixelInfo(_dropFiles[0], sender);
 
-            // マウス座標取得
-            DependencyObject dependencyObject = (DependencyObject)sender;
-            System.Windows.Controls.Button button = dependencyObject as System.Windows.Controls.Button;
-            // クリックしたボタン上のマウス座標を取得する
-            Point pt = Mouse.GetPosition(button);
+            // 異常時でもオブジェクトは返ってくるので値を代入する
+            XCoordinate = _pixelData.XCoordinate;
+            YCoordinate = _pixelData.YCoordinate;
+            OldRed = _pixelData.OldRed;
+            OldGreen = _pixelData.OldGreen;
+            OldBlue = _pixelData.OldBlue;
+            OldAlpha = _pixelData.OldAlpha;
 
-
-            // debug
-            OldRed++;
         }
 
+        #endregion
+
+        #region 更新ボタン押下時の処理
+
+        /// <summary>
+        /// 画素情報が存在すればtrue
+        /// </summary>
+        private bool IsUpdateEnabled()
+        {
+            if (_pixelData == null)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 更新ボタン押下時の処理
+        /// </summary>
+        private void UpdatePixelInfo(object sender)
+        {
+            // テスト段階なのでとりあえずリストの先頭要素を更新する
+            _dropFiles[0].ImageData = _model.UpdatePixelInfo(_dropFiles[0].ImageData, _pixelData);
+        }
 
         #endregion
 

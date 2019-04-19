@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Controls;
 
 namespace ImageProcessing.Model
 {
@@ -14,9 +16,30 @@ namespace ImageProcessing.Model
     internal class ViewInfoAcquisition
     {
 
-        internal Point GetMousePosition()
+        internal bool GetMousePositionOnButton(object sender, out Point pt)
         {
-            return new Point();
+            pt = new Point();
+
+            // キャスト
+            // 使用先でnullチェックするのでここでは不要
+            DependencyObject dependencyObject = (DependencyObject)sender;
+            // Button上のマウスデータを取得
+            Button button = sender as Button;
+
+            if (button == null)
+            {
+                FindVisualParent<Button>(dependencyObject);
+            }
+
+            if (button == null)
+            {
+                return false;
+            }
+
+            // クリックしたボタン上のマウス座標を取得する
+            pt = Mouse.GetPosition(button);
+
+            return true;
         }
 
 
@@ -70,4 +93,5 @@ namespace ImageProcessing.Model
             }
 
         }
+    }
 }

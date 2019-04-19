@@ -68,7 +68,11 @@
             <Label Content="{Binding OldAlpha}" Grid.Row="1" Grid.Column="7" HorizontalContentAlignment="Center"/>
             <!--変更後の画素値(Row = 2)-->
             <Label Content="{Binding NewPixel}" Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" HorizontalContentAlignment="Right"/>
-            <Button Content="{Binding Update}" Grid.Row="2" Grid.Column="8"/>
+            <TextBox Text="{Binding NewRed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="4" HorizontalContentAlignment="Center" Margin="25,5"/>
+            <TextBox Text="{Binding NewGreen, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="5" HorizontalContentAlignment="Center" Margin="25,5"/>
+            <TextBox Text="{Binding NewBlue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="6" HorizontalContentAlignment="Center" Margin="25,5"/>
+            <TextBox Text="{Binding NewAlpha, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="7" HorizontalContentAlignment="Center" Margin="25,5"/>
+            <Button Content="{Binding Update}" Grid.Row="2" Grid.Column="8" Command="{Binding UpdateCommand}"/>
         </Grid>
 
         <!--クリックイベントを拾いたいのでグリッドで括る-->
@@ -90,11 +94,15 @@
                                 <TextBlock Text="{Binding FilePath}" />
                                 <!--クリック時のイベントを拾いたいのでボタンにして画像を表示する-->
                                 <!--RelativeSourceでFilesの一つ上のwindow.DataContextを指定しWriteableBitmapCommandにつなげる-->
-                                <Button Background="Transparent" BorderBrush="Transparent" Foreground="Transparent"
+                                <Button  BorderBrush="Transparent" Foreground="Transparent"
                                         Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type Window}}, Path=DataContext.WriteableBitmapCommand}"
-                                        CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}">
+                                        CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+                                        Padding="0" BorderThickness="0" 
+                                        Background="Transparent" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                        >
+                                    <!--Button側でHor/VerをCenterにすることで内部のImageにフィットする-->
                                     <!--表示する画像はFiles.ImageData-->
-                                    <Image Source="{Binding Path=ImageData}" />
+                                    <Image Source="{Binding Path=ImageData}" Margin="0" />
                                 </Button>
                             </StackPanel>
                             <i:Interaction.Triggers>

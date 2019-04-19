@@ -32,6 +32,16 @@ namespace ImageProcessing.Model
         /// </summary>
         private const float METER = 1000;
 
+        /// <summary>
+        /// RGBA表現時の画素バイト数
+        /// </summary>
+        private const int COLORBYTE_RGBA = 4;
+
+        /// <summary>
+        /// WriteableBitmapに書き込む際のアルファ値のデフォルト(255)
+        /// </summary>
+        private readonly byte DEFAULT_ALPHA = 255;
+
         #endregion
 
 
@@ -93,18 +103,151 @@ namespace ImageProcessing.Model
             return null;
         }
 
-
-        internal int GetTargetBinary()
+        /// <summary>
+        /// 表示されている画像データのバイナリ配列から要求された画素を返す
+        /// </summary>
+        /// <returns>画素情報オブジェクト</returns>
+        /// <param name="targetImg">対象画像</param>
+        /// <param name="doublePixelPoint">マウス座標</param>
+        /// <remarks>RGBAの[n]~[n+2]における[n]の位置を返す。異常時は0</remarks>
+        internal PixelData GetPixelInfo(WriteableBitmap targetImg, System.Windows.Point doublePixelPoint)
         {
-            return 0;
+            if (targetImg == null)
+            {
+                return null;
+            }
+
+            // WBMPの画像データを取得する
+            byte[] dataArr = GetWBMPDataArray(targetImg, COLORBYTE_RGBA);
+
+            if (dataArr == null || dataArr.Any() == false)
+            {
+                return null;
+            }
+
+            // マウス座標をintに変換する
+            Point intPixelPoint = ConvertDblPtToIntPt(doublePixelPoint);
+
+            // 画像のバイナリデータ内での位置を取得する
+            int pixelPos = GetPixelPosition(intPixelPoint.X, intPixelPoint.Y, targetImg.PixelWidth, COLORBYTE_RGBA);
+
+            // 画像の領域を超えていれば異常
+            // BGRAであれば、BGRAのBの位置を取得しているのでAの位置まであるかをチェックする必要がある
+            if (dataArr.Length < pixelPos + COLORBYTE_RGBA - 1)
+            {
+                return null;
+            }
+
+            // オブジェクトを生成してwbmpから各値を入れ込んで返す
+            PixelData pixelData = new PixelData();
+            pixelData.XCoordinate = intPixelPoint.X;
+            pixelData.YCoordinate = intPixelPoint.Y;
+            // BGRAの順
+            pixelData.OldBlue = dataArr[pixelPos];
+            pixelData.OldGreen = dataArr[pixelPos + 1];
+            pixelData.OldRed = dataArr[pixelPos + 2];
+            pixelData.OldAlpha = dataArr[pixelPos + 3];
+
+            return pixelData;
         }
 
-
-        internal PixelData CreateTargetPixelData()
+        /// <summary>
+        /// WBMPの指定された画素を渡された画素情報で更新する
+        /// </summary>
+        /// <param name="target">更新対象のWBMP</param>
+        /// <param name="updateData">更新したい画素情報</param>
+        /// <returns>更新したWBMP</returns>
+        internal WriteableBitmap UpdatePixelInfo(WriteableBitmap target, PixelData updateData)
         {
+
+
             return null;
         }
 
+        /// <summary>
+        /// 渡されたWBMPオブジェクトのバイナリデータを取得する
+        /// </summary>
+        /// <param name="target">バイナリデータを取得したいWBMP</param>
+        /// <returns>WBMPのバイナリデータ</returns>
+        private byte[] GetWBMPDataArray(WriteableBitmap target, int colorByte)
+        {
+            // 現在表示されている画像の縦横を取得
+            int wbmpWidth = target.PixelWidth;
+            int wbmpHeight = target.PixelHeight;
+
+            // wbmpの画像データを取得するための配列を用意する
+            byte[] dataArr = CreateDataArray(wbmpWidth, wbmpHeight, colorByte);
+
+            // wbmpの画像情報を取得する
+            target.CopyPixels(dataArr, wbmpWidth * colorByte, 0);
+
+            return dataArr;
+        }
+
+        /// <summary>
+        /// 座標情報と画像の表示幅から、その地点の画素情報が配列の何番目かを取得する
+        /// </summary>
+        /// <param name="xCoordinate">画像のX座標</param>
+        /// <param name="yCoordinate">画像のY座標</param>
+        /// <param name="width">画像の幅(pixel)</param>
+        /// <param name="colorByte">1画素あたりの画素数(例:RGBなら3)</param>
+        /// <returns>バイナリデータ上での対象画素情報開始位置(0~)</returns>
+        private int GetPixelPosition(int xCoordinate, int yCoordinate, int width, int colorByte)
+        {
+            return ((yCoordinate * width) + xCoordinate) * colorByte;
+        }
+
+
+        /// <summary>
+        /// 指定した画像をバイナリデータとして代入可能な空のbyte[]を作成する
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="colorByte"></param>
+        /// <returns></returns>
+        private byte[] CreateDataArray(WriteableBitmap target, int colorByte)
+        {
+            if (target == null)
+            {
+                return null;
+            }
+            else
+            {
+                return CreateDataArray(target.PixelWidth, target.PixelHeight, colorByte);
+            }
+        }
+
+        /// <summary>
+        /// 指定した画像の情報を代入可能な、空のbyte[]を作成する
+        /// </summary>
+        /// <param name="width">画像幅(pixel単位)</param>
+        /// <param name="height">画像高さ(pixel単位)</param>
+        /// <param name="colorByte">1pixelあたりの画素数</param>
+        /// <returns></returns>
+        private byte[] CreateDataArray(int width, int height, int colorByte)
+        {
+            if (width == 0 || height == 0 || colorByte == 0)
+            {
+                return null;
+            }
+
+            return new byte[width * height * colorByte];
+        }
+
+
+        /// <summary>
+        /// double型PointをInt型Pointに置換する(小数以下切り捨て)
+        /// </summary>
+        /// <param name="dblPt">System.Windows.Pointオブジェクト</param>
+        /// <returns>System.Drawing.Pointオブジェクト</returns>
+        private Point ConvertDblPtToIntPt(System.Windows.Point dblPt)
+        {
+            Point intPt = new Point();
+
+            intPt.X = (int)dblPt.X;
+            intPt.Y = (int)dblPt.Y;
+
+            return intPt;
+        }
 
         /// <summary>
         /// 与えられたファイルパスのBMPファイルをバイナリデータとして取得する
@@ -279,6 +422,9 @@ namespace ImageProcessing.Model
             int width = BitConverter.ToInt32(bmpData.ImageWidth, 0);
             // 画像高さ
             int height = BitConverter.ToInt32(bmpData.ImageHeight, 0);
+            // ピクセル(byte)
+            int pixel = (BitConverter.ToInt16(bmpData.Pixel, 0)) / 8;
+
 
             WriteableBitmap wbmp = new WriteableBitmap
                 (
@@ -309,26 +455,63 @@ namespace ImageProcessing.Model
             //}
 
             // そのまま入れ込む
-            byte[] dataArr = new byte[width * height * 4];
+            // byte[] dataArr = new byte[width * height * 4];
+            byte[] dataArr = new byte[bmpData.Data.Length * COLORBYTE_RGBA / pixel];
             // dataArr[4n-1]を常に定数にするためのカウンタ
-            int count = 0;
-            for (int i = 0; i < bmpData.Data.Length && i < dataArr.Length; i += 3)　// もとはRGBなので3ずつ値を増やす
+            //int alphaCount = 0;
+            //for (int i = 0; i < bmpData.Data.Length && i + alphaCount < dataArr.Length; i += 3)　// もとはRGBなので3ずつ値を増やす
+            //{
+            //    // dataArr[i] = bmpData.Data[i]; // 直入れ
+            //    dataArr[i + alphaCount] = bmpData.Data[i];           // B
+            //    dataArr[i + 1 + alphaCount] = bmpData.Data[i + 1];   // G
+            //    dataArr[i + 2 + alphaCount] = bmpData.Data[i + 2];   // R
+            //    // Alpha係数は0ほど透明(不可視), 255が不透明(可視)なのでデフォルトを指定しておく
+            //    dataArr[i + 3 + alphaCount] = DEFAULT_ALPHA; // Aは値定義されてない
+            //    alphaCount++;
+            //}
+
+            //// 末尾から入れるなら
+            //int rgbaCount = 0;
+            //for (int i = bmpData.Data.Length - 1; 0 <= i; i -= 3)
+            //{
+            //    dataArr[rgbaCount] = bmpData.Data[i - 2];
+            //    dataArr[rgbaCount + 1] = bmpData.Data[i - 1];
+            //    dataArr[rgbaCount + 2] = bmpData.Data[i];
+            //    dataArr[rgbaCount + 3] = DEFAULT_ALPHA;
+            //    rgbaCount += 4;
+            //}
+
+            // 最下行をそのままの順で最上行とするなら
+            int alphaCount = 0;
+            int row = 0;
+            for (int i = bmpData.Data.Length - width * pixel; i > 0; i -= (width * pixel))
             {
-                // dataArr[i] = bmpData.Data[i]; // 直入れ
-                dataArr[i + count] = bmpData.Data[i];           // B
-                dataArr[i + 1 + count] = bmpData.Data[i + 1];   // G
-                dataArr[i + 2 + count] = bmpData.Data[i + 2];   // R
-                // Alpha係数は0ほど透明(不可視), 255が不透明(可視)なので255を指定しておく
-                dataArr[i + 3 + count] = 255; // Aは値定義されてない
-                count++;
+                bool shouldContinue = true;
+
+                for (int j = i; shouldContinue; j += pixel)
+                {
+                    if (j % (width * pixel) == width * pixel - pixel)
+                    {
+                        shouldContinue = false;
+                    }
+
+                    dataArr[row+alphaCount] = bmpData.Data[j];
+                    dataArr[row + 1 + alphaCount] = bmpData.Data[j + 1];
+                    dataArr[row + 2 + alphaCount] = bmpData.Data[j + 2];
+                    dataArr[row + 3 + alphaCount] = DEFAULT_ALPHA;
+                    alphaCount += COLORBYTE_RGBA;
+                }
+                alphaCount = 0;
+                row += width * COLORBYTE_RGBA;
             }
+
 
             // wbmpに書き込む
             wbmp.WritePixels
             (
             new System.Windows.Int32Rect(0, 0, width, height),
             dataArr,
-            width * 4,
+            width * COLORBYTE_RGBA,
             0
             );
             return wbmp;
