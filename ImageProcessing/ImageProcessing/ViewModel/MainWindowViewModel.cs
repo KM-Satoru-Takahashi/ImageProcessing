@@ -233,7 +233,9 @@ namespace ImageProcessing.ViewModel
 
         #endregion
 
-
+        /// <summary>
+        /// 更新ボタン押下時のコマンド
+        /// </summary>
         public UpdateCommand UpdateCommand
         {
             get
@@ -540,15 +542,16 @@ namespace ImageProcessing.ViewModel
         private void ShowPixelInfo(object sender)
         {
             // テスト段階なのでとりあえずリストの0番目を渡す
-            _pixelData = _model.GetPixelInfo(_dropFiles[0], sender);
+            // _pixelDataに代入するとNew~が初期化されてしまうのでローカルで一旦保持して代入する
+            Entities.PixelData pixelData = _model.GetPixelInfo(_dropFiles[0], sender);
 
             // 異常時でもオブジェクトは返ってくるので値を代入する
-            XCoordinate = _pixelData.XCoordinate;
-            YCoordinate = _pixelData.YCoordinate;
-            OldRed = _pixelData.OldRed;
-            OldGreen = _pixelData.OldGreen;
-            OldBlue = _pixelData.OldBlue;
-            OldAlpha = _pixelData.OldAlpha;
+            XCoordinate = pixelData.XCoordinate;
+            YCoordinate = pixelData.YCoordinate;
+            OldRed = pixelData.OldRed;
+            OldGreen = pixelData.OldGreen;
+            OldBlue = pixelData.OldBlue;
+            OldAlpha = pixelData.OldAlpha;
 
         }
 

@@ -44,7 +44,7 @@ namespace ImageProcessing.Entities
         /// BMPデータフォーマット部分
         /// </summary>
         /// <remarks>[0]~[1], ビッグエンディアン, 0x42_0x4d->BM</remarks>
-        private byte[] _dataFormat = new Byte[2];
+        private byte[] _dataFormat = new byte[2];
 
         /// <summary>
         /// BMPデータフォーマット部分

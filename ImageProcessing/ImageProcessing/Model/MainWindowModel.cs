@@ -170,9 +170,7 @@ namespace ImageProcessing.Model
         {
             // TODO: CheckDropdata みたいなメソッドを作ってupdateDataの正当性をここで担保してもいいかも
             // TODO: ImageManagerにわたす前に他のメソッドでも汎用的に使える可能性があるので
-            _imageManager.UpdatePixelInfo(updateData, pixelData);
-
-            return null;
+            return _imageManager.UpdatePixelInfo(updateData, pixelData);
         }
 
         /// <summary>
