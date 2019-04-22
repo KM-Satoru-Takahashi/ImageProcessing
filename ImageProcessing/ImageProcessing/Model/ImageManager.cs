@@ -38,12 +38,16 @@ namespace ImageProcessing.Model
         private const int COLORBYTE_RGBA = 4;
 
         /// <summary>
+        /// BMP画像データで揃えるべき幅ピクセルの境界値
+        /// </summary>
+        private const int BMP_WIDTH_BOUNDARY = 4;
+
+        /// <summary>
         /// WriteableBitmapに書き込む際のアルファ値のデフォルト(255)
         /// </summary>
         private readonly byte DEFAULT_ALPHA = 255;
 
         #endregion
-
 
         /// <summary>
         /// コンストラクタ
@@ -159,10 +163,70 @@ namespace ImageProcessing.Model
         /// <returns>更新したWBMP</returns>
         internal WriteableBitmap UpdatePixelInfo(WriteableBitmap target, PixelData updateData)
         {
+            if (target == null || updateData == null)
+            {
+                return null;
+            }
 
+            // WBMPの画像データを取得する
+            byte[] dataArr = GetWBMPDataArray(target, COLORBYTE_RGBA);
 
-            return null;
+            if (dataArr == null || dataArr.Any() == false)
+            {
+                return null;
+            }
+
+            // 画像のバイナリデータ内での位置を取得する
+            int pixelPos = GetPixelPosition(updateData.XCoordinate, updateData.YCoordinate, target.PixelWidth, COLORBYTE_RGBA);
+
+            return UpdateWBMPPixel(target, dataArr, pixelPos, updateData);
         }
+
+        /// <summary>
+        /// 与えられたBMPオブジェクトを指定された画素データで更新する
+        /// </summary>
+        /// <param name="targetWBMP">更新対象のWBMPデータ</param> 
+        /// <param name="targetArr">更新対象のWBMPデータ配列</param>
+        /// <param name="pixelPosition">更新開始バイナリ位置</param>
+        /// <param name="pixelData">更新データ</param>
+        /// <returns>更新したWBMPオブジェクト</returns>
+        private WriteableBitmap UpdateWBMPPixel(WriteableBitmap targetWBMP, byte[] targetArr, int pixelPosition, PixelData pixelData)
+        {
+            // 引数オブジェクトのnullチェック
+            if (targetWBMP == null || pixelData == null)
+            {
+                return null;
+            }
+            // 引数配列のnullチェック
+            else if (targetArr == null || targetArr.Any() == false)
+            {
+                return null;
+            }
+            // 画像の領域を超えていれば異常
+            // BGRAであれば、BGRAのBの位置を取得しているのでAの位置まであるかをチェックする必要がある
+            else if (targetArr.Length < pixelPosition + COLORBYTE_RGBA - 1)
+            {
+                return null;
+            }
+
+            // 値の埋め込み
+            targetArr[pixelPosition] = pixelData.NewBlue;       // B
+            targetArr[pixelPosition + 1] = pixelData.NewGreen;  // G
+            targetArr[pixelPosition + 2] = pixelData.NewRed;    // R
+            targetArr[pixelPosition + 3] = pixelData.NewAlpha;  // A
+
+            // wbmpに書き込む
+            targetWBMP.WritePixels
+            (
+            new System.Windows.Int32Rect(0, 0, targetWBMP.PixelWidth, targetWBMP.PixelHeight),
+            targetArr,
+            targetWBMP.PixelWidth * COLORBYTE_RGBA,
+            0
+            );
+
+            return targetWBMP;
+        }
+
 
         /// <summary>
         /// 渡されたWBMPオブジェクトのバイナリデータを取得する
@@ -232,7 +296,6 @@ namespace ImageProcessing.Model
 
             return new byte[width * height * colorByte];
         }
-
 
         /// <summary>
         /// double型PointをInt型Pointに置換する(小数以下切り捨て)
@@ -418,14 +481,26 @@ namespace ImageProcessing.Model
         /// <returns>WriteableBitampオブジェクト</returns>
         private WriteableBitmap CreateWBMP(DropData bmpData)
         {
+            if (bmpData == null)
+            {
+                return null;
+            }
+
             // 画像幅
             int width = BitConverter.ToInt32(bmpData.ImageWidth, 0);
             // 画像高さ
             int height = BitConverter.ToInt32(bmpData.ImageHeight, 0);
             // ピクセル(byte)
             int pixel = (BitConverter.ToInt16(bmpData.Pixel, 0)) / 8;
+            // ストライド(画像幅*pixel)
+            int stride = width * pixel;
+            // 補正のための一行あたりのバイト
+            int additional = 0;
 
+            // データは最小でも255あるので補正しなければならない
+            bmpData.Data = CorrectBMPDataArray(bmpData.Data, stride, height);
 
+            // WBMPオブジェクトを用意する
             WriteableBitmap wbmp = new WriteableBitmap
                 (
                 width,
@@ -439,82 +514,169 @@ namespace ImageProcessing.Model
                 );
 
             // バイナリ配列データを用意する
-            // 1次元配列の中で行列が区別される
-
-            // 試作→上からグラデーションをかける
-            //byte[] dataArr = new byte[width * height];
-            //for (int row = 0; row < height; row++)
-            //{
-            //    for (int col = 0; col < width; col++)
-            //    {
-            //        int index = row * width         // 行
-            //                                + col;  // 列
-
-            //        dataArr[index] = (byte)(0xFF * row / (double)height - 1);
-            //    }
-            //}
-
-            // そのまま入れ込む
-            // byte[] dataArr = new byte[width * height * 4];
+            // 1次元配列の中で行列が区別される            
+            // 元の要素数(1byte)*RGBAで必要なバイト数(4byte)/元の色数pixel がWBMPへ書き込むデータ配列の要素数として必要
             byte[] dataArr = new byte[bmpData.Data.Length * COLORBYTE_RGBA / pixel];
-            // dataArr[4n-1]を常に定数にするためのカウンタ
-            //int alphaCount = 0;
-            //for (int i = 0; i < bmpData.Data.Length && i + alphaCount < dataArr.Length; i += 3)　// もとはRGBなので3ずつ値を増やす
-            //{
-            //    // dataArr[i] = bmpData.Data[i]; // 直入れ
-            //    dataArr[i + alphaCount] = bmpData.Data[i];           // B
-            //    dataArr[i + 1 + alphaCount] = bmpData.Data[i + 1];   // G
-            //    dataArr[i + 2 + alphaCount] = bmpData.Data[i + 2];   // R
-            //    // Alpha係数は0ほど透明(不可視), 255が不透明(可視)なのでデフォルトを指定しておく
-            //    dataArr[i + 3 + alphaCount] = DEFAULT_ALPHA; // Aは値定義されてない
-            //    alphaCount++;
-            //}
 
-            //// 末尾から入れるなら
-            //int rgbaCount = 0;
-            //for (int i = bmpData.Data.Length - 1; 0 <= i; i -= 3)
-            //{
-            //    dataArr[rgbaCount] = bmpData.Data[i - 2];
-            //    dataArr[rgbaCount + 1] = bmpData.Data[i - 1];
-            //    dataArr[rgbaCount + 2] = bmpData.Data[i];
-            //    dataArr[rgbaCount + 3] = DEFAULT_ALPHA;
-            //    rgbaCount += 4;
-            //}
-
-            // 最下行をそのままの順で最上行とするなら
-            int alphaCount = 0;
-            int row = 0;
-            for (int i = bmpData.Data.Length - width * pixel; i > 0; i -= (width * pixel))
+            if (dataArr == null || dataArr.Any() == false)
             {
+                return null;
+            }
+
+            // bmpはストライドを必ず4の倍数にしなければならない
+            // 新データ配列を用意してから補正する
+            // ※pixelはRGBで3固定なので、画像幅が4の倍数でなければ必ず補正しなければならない
+            if (stride % BMP_WIDTH_BOUNDARY != 0)
+            {
+                // 行末を0x00で埋める補正が必要となる
+                bmpData.Data = CorrectBMPWidthArray(bmpData.Data, height, stride, out additional);
+
+                // ストライドに1行あたりの補正を足す必要がある
+                stride += additional;
+            }
+
+            // 元データの最下行→そのひとつ上の行の順で、WBMPの上段に代入していく
+            // Alpha値の要素を定数255にするカウンタ
+            int alphaCount = 0;
+            // WBMPへ代入する際のデータ行が何行目かを見るカウンタ
+            int row = 0;
+            // 元のデータ配列の最下行からスタートする
+            for (int i = bmpData.Data.Length - stride; i > 0; i -= stride)
+            {
+                // 元の行の最後のpixelセットを読み込んだらfalseにするフラグ
                 bool shouldContinue = true;
 
+                // 当該行の最初の要素から読み取りを開始する
                 for (int j = i; shouldContinue; j += pixel)
                 {
-                    if (j % (width * pixel) == width * pixel - pixel)
-                    {
-                        shouldContinue = false;
-                    }
-
-                    dataArr[row+alphaCount] = bmpData.Data[j];
+                    // BMPはBGR, WBMPはBGRAの順に画素を並べる必要があるのでズレを考慮して代入していく
+                    dataArr[row + alphaCount] = bmpData.Data[j];
                     dataArr[row + 1 + alphaCount] = bmpData.Data[j + 1];
                     dataArr[row + 2 + alphaCount] = bmpData.Data[j + 2];
                     dataArr[row + 3 + alphaCount] = DEFAULT_ALPHA;
                     alphaCount += COLORBYTE_RGBA;
+
+                    // もし今読み込んでいる画素の先頭(BGRのBが格納されている位置)が行の最後なら次の行へ向かうフラグを立てる
+                    if (j % stride == stride - pixel - additional)
+                    {
+                        // 行末に補正要素がある場合は0で埋めなければならない
+                        for (int coordinateIndex = 1; coordinateIndex <= additional; coordinateIndex++)
+                        {
+                            dataArr[row + 3 + alphaCount + coordinateIndex] = 0;
+                        }
+
+                        // 補正要素分だけ次の要素の開始位置(行頭)を調整する必要がある
+
+
+                        shouldContinue = false;
+                    }
                 }
+                // 行頭に戻るのでAlpha値を入れる位置をリセットする
                 alphaCount = 0;
+                // 次の行となる配列の要素がどこから始まるかを出しておく
                 row += width * COLORBYTE_RGBA;
             }
-
 
             // wbmpに書き込む
             wbmp.WritePixels
             (
             new System.Windows.Int32Rect(0, 0, width, height),
             dataArr,
-            width * COLORBYTE_RGBA,
+            width * COLORBYTE_RGBA, // ストライド：行の要素数*色pixel数
             0
             );
             return wbmp;
+        }
+
+        /// <summary>
+        /// Data配列を補正する
+        /// </summary>
+        /// <param name="dataArr">現在のデータ配列</param>
+        /// <param name="stride">ストライド</param>
+        /// <param name="height">高さ</param>
+        /// <returns>補正後のデータ配列</returns>
+        private byte[] CorrectBMPDataArray(byte[] dataArr, int stride, int height)
+        {
+            if (dataArr == null)
+            {
+                // nullは異常だけど作成して返してあげる
+                return new byte[stride * height];
+            }
+            // サイズが等しいなら何もしないでそのまま返す
+            else if (dataArr.Length == stride * height)
+            {
+                return dataArr;
+            }
+
+            // ストライド*高さで作成する
+            byte[] newDataArr = new byte[stride * height];
+
+            // 旧データを入れ込んで返す
+            for (int i = 0; i < newDataArr.Length; i++)
+            {
+                newDataArr[i] = dataArr[i];
+
+                // 無いとは思うが、元配列を超えてしまうなら外に出る
+                if (dataArr.Length <= i + 1)
+                {
+                    break;
+                }
+            }
+
+            return newDataArr;
+
+        }
+
+        /// <summary>
+        /// BMPのbyte行幅のズレを0で埋める
+        /// </summary>
+        /// <param name="dataArr"></param>
+        /// <param name="stride"></param>
+        /// <returns></returns>
+        private byte[] CorrectBMPWidthArray(byte[] dataArr, int height, int stride, out int shift)
+        {
+            // 新しいストライドを取得する
+            // 1行あたりいくつ0埋めがいるか
+            shift = BMP_WIDTH_BOUNDARY - (stride % BMP_WIDTH_BOUNDARY);
+
+            // 新しいストライド
+            int newStride = stride + shift;
+
+            if (dataArr == null || dataArr.Any() == false)
+            {
+                return null;
+            }
+
+            // 高さ*ズレ埋めだけ配列の要素数を増やす必要がある
+            int additional = shift * height;
+
+            // 新たな配列を作成
+            byte[] correctArr = new byte[dataArr.Length + additional];
+
+            // 行末のズレを0で埋めた補正後のデータ配列を作成する
+            // 行のシフト値のカウンタ
+            int shiftCount = 0;
+            // 元データを順に取り出す
+            for (int dataArrIndex = 0; dataArrIndex < dataArr.Length; dataArrIndex++)
+            {
+                // 補正データの対応する位置は、元データの位置+ズレ*(行数-1)番目
+                correctArr[dataArrIndex + shiftCount] = dataArr[dataArrIndex];
+
+                // 元データの行末に来た場合、ズレのぶんだけ0埋めを行う
+                if (dataArrIndex % stride == stride - 1) //stride
+                {
+                    // 補正データ行末まで0で埋める
+                    for (int addIndex = dataArrIndex + shiftCount + 1; addIndex % newStride != newStride - 1; addIndex++)
+                    {
+                        correctArr[addIndex] = 0;
+                    }
+
+                    shiftCount += shift;
+                }
+
+            }
+
+            return correctArr;
         }
 
     }
