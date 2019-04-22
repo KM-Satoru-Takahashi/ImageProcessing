@@ -69,11 +69,14 @@
     </ApplicationDefinition>
     <Compile Include="Entities\EntityBase.cs" />
     <Compile Include="Entities\PixelData.cs" />
+    <Compile Include="Model\ViewManager\BackgroundChangeViewManager.cs" />
     <Compile Include="Model\ViewManager\ButtonViewManager.cs" />
     <Compile Include="Model\ImageManager.cs" />
     <Compile Include="Model\MainWindowModel.cs" />
     <Compile Include="Model\ViewManager\PixelDataViewManager.cs" />
     <Compile Include="Model\ViewInfoAcquisition.cs" />
+    <Compile Include="ViewModel\Command\BackgroundChangeCommand.cs" />
+    <Compile Include="ViewModel\Command\FlipCommand.cs" />
     <Compile Include="ViewModel\Command\LeftRotateCommand.cs" />
     <Compile Include="ViewModel\Command\RightRotateCommand.cs" />
     <Compile Include="ViewModel\Command\UpdateCommand.cs" />

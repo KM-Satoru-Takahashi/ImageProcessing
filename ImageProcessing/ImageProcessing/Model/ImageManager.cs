@@ -100,11 +100,80 @@ namespace ImageProcessing.Model
         /// <summary>
         /// バイナリデータの右回転処理
         /// </summary>
-        /// <param name="dropData"></param>
+        /// <param name="dropData">回転対称となるデータ</param>
         /// <returns>右回転した画像データのWriteableBMP形式</returns>
         internal WriteableBitmap RightRotate(DropData dropData)
         {
-            return null;
+            if (dropData == null)
+            {
+                return null;
+            }
+
+            // 縦横が入れ替わる
+            int newWidth = BitConverter.ToInt32(dropData.ImageHeight, 0);
+            int newHeight = BitConverter.ToInt32(dropData.ImageWidth, 0);
+
+            // 現在表示されているWBMP画像のバイナリを取得する
+            byte[] oldWBMPBinary = GetWBMPDataArray(dropData.ImageData, COLORBYTE_RGBA);
+            if (oldWBMPBinary == null || oldWBMPBinary.Any() == false)
+            {
+                return null;
+            }
+
+            // 一時的にデータを保存しておくリストを用意する
+            List<byte> tempList = new List<byte>();
+
+            // 旧データのn列目を下側から読んだものが、新データのn行目と対応する
+            // 旧データの列数(新データの行数)だけ繰り返す
+            for (int oldCol = 0; oldCol < newHeight; oldCol++)
+            {
+                // oldCol列目を下側から読んだものが新しい配列のn行目となる
+                // 旧配列における対応する最初の座標(一番下の行の当該列の最初の画素が入っているインデックス)を求める
+                // 最下行に必ず最後の要素があるので、最下行の最後から巻き戻れば値を取得できる
+                int readStartIndex = oldWBMPBinary.Length  // 全要素数を取得
+                                        - (newHeight - oldCol) * COLORBYTE_RGBA; // (旧幅-ほしい列番)*ピクセル数で当該要素まで巻き戻る
+
+                // その列の要素を上まで登っていく
+                for (int element = readStartIndex; element >= 0; element -= newHeight * COLORBYTE_RGBA) // 行のストライドだけ上方に遷移すれば列を求められる
+                {
+                    // tempListへ順に保存していく
+                    tempList.Add(oldWBMPBinary[element]);       // B
+                    tempList.Add(oldWBMPBinary[element + 1]);   // G
+                    tempList.Add(oldWBMPBinary[element + 2]);   // R
+                    tempList.Add(oldWBMPBinary[element + 3]);   // A
+                }
+            }
+
+            // 新たなデータ配列を取得
+            byte[] newImageData = tempList.ToArray();
+
+            if (dropData.ImageData == null)
+            {
+                return null;
+            }
+
+            // WBMPオブジェクトを用意する
+            WriteableBitmap wbmp = new WriteableBitmap
+                (
+                newWidth,
+                newHeight,
+                dropData.HorizontalResolutionDPI,
+                dropData.VerticalResolutionDPI,
+                System.Windows.Media.PixelFormats.Pbgra32, // BGRA32用
+                null // indexつきのbmp以外はnullで良い
+                );
+
+            // WBMPに書き込む            
+            wbmp.WritePixels
+            (
+            new System.Windows.Int32Rect(0, 0, newWidth, newHeight),
+            newImageData,
+            newWidth * COLORBYTE_RGBA, // ストライド：行の要素数*色pixel数
+            0
+            );
+
+            return wbmp;
+
         }
 
         /// <summary>
@@ -161,7 +230,7 @@ namespace ImageProcessing.Model
         /// <param name="target">更新対象のWBMP</param>
         /// <param name="updateData">更新したい画素情報</param>
         /// <returns>更新したWBMP</returns>
-        internal WriteableBitmap UpdatePixelInfo(WriteableBitmap target, PixelData updateData)
+        internal WriteableBitmap SetPixelInfo(WriteableBitmap target, PixelData updateData)
         {
             if (target == null || updateData == null)
             {
@@ -289,12 +358,19 @@ namespace ImageProcessing.Model
         /// <returns></returns>
         private byte[] CreateDataArray(int width, int height, int colorByte)
         {
-            if (width == 0 || height == 0 || colorByte == 0)
-            {
-                return null;
-            }
+            return CreateDataArray(width * colorByte, height);
+        }
 
-            return new byte[width * height * colorByte];
+        /// <summary>
+        /// 指定した画像の情報を代入可能な、空のbyte[]を作成する
+        /// </summary>
+        /// <param name="stride">画像ストライド(幅*pixel)</param>
+        /// <param name="height">画像高さ</param>
+        /// <returns></returns>
+        private byte[] CreateDataArray(int stride, int height)
+        {
+
+            return new byte[stride * height];
         }
 
         /// <summary>
@@ -494,11 +570,21 @@ namespace ImageProcessing.Model
             int pixel = (BitConverter.ToInt16(bmpData.Pixel, 0)) / 8;
             // ストライド(画像幅*pixel)
             int stride = width * pixel;
-            // 補正のための一行あたりのバイト
-            int additional = 0;
 
+            // bmpはストライドが必ず4の倍数になっている(0埋めされている)
+            // ※pixelはRGBで3固定なので、画像幅が4の倍数でなければ必ず補正されている
+            // 1行あたりの補正されたバイト数
+            int additional = width % BMP_WIDTH_BOUNDARY;
+            stride += additional;
+
+            // 補正したストライドを使用する
             // データは最小でも255あるので補正しなければならない
             bmpData.Data = CorrectBMPDataArray(bmpData.Data, stride, height);
+
+            if (bmpData.Data == null || bmpData.Data.Any() == false)
+            {
+                return null;
+            }
 
             // WBMPオブジェクトを用意する
             WriteableBitmap wbmp = new WriteableBitmap
@@ -515,24 +601,13 @@ namespace ImageProcessing.Model
 
             // バイナリ配列データを用意する
             // 1次元配列の中で行列が区別される            
-            // 元の要素数(1byte)*RGBAで必要なバイト数(4byte)/元の色数pixel がWBMPへ書き込むデータ配列の要素数として必要
-            byte[] dataArr = new byte[bmpData.Data.Length * COLORBYTE_RGBA / pixel];
+            // BMPの画像幅補正は含まなくて良いので、縦*横*BGRAが必要なバイト数
+            // がWBMPへ書き込むデータ配列の要素数として必要
+            byte[] dataArr = CreateDataArray(width, height, COLORBYTE_RGBA);
 
             if (dataArr == null || dataArr.Any() == false)
             {
                 return null;
-            }
-
-            // bmpはストライドを必ず4の倍数にしなければならない
-            // 新データ配列を用意してから補正する
-            // ※pixelはRGBで3固定なので、画像幅が4の倍数でなければ必ず補正しなければならない
-            if (stride % BMP_WIDTH_BOUNDARY != 0)
-            {
-                // 行末を0x00で埋める補正が必要となる
-                bmpData.Data = CorrectBMPWidthArray(bmpData.Data, height, stride, out additional);
-
-                // ストライドに1行あたりの補正を足す必要がある
-                stride += additional;
             }
 
             // 元データの最下行→そのひとつ上の行の順で、WBMPの上段に代入していく
@@ -540,40 +615,33 @@ namespace ImageProcessing.Model
             int alphaCount = 0;
             // WBMPへ代入する際のデータ行が何行目かを見るカウンタ
             int row = 0;
-            // 元のデータ配列の最下行からスタートする
-            for (int i = bmpData.Data.Length - stride; i > 0; i -= stride)
-            {
-                // 元の行の最後のpixelセットを読み込んだらfalseにするフラグ
-                bool shouldContinue = true;
 
-                // 当該行の最初の要素から読み取りを開始する
-                for (int j = i; shouldContinue; j += pixel)
+            // 元のデータ配列の最下行からスタートし、1行ずつ上にいく
+            for (int i = bmpData.Data.Length - stride; i >= 0; i -= stride)
+            {
+                // BMPの境界の0埋めを判定するためのカウンタ
+                int boundCount = 0;
+
+                // 当該行の最初の要素から最後の要素まで読み取りを行う
+                for (int j = i; boundCount != width; j += pixel)
                 {
-                    // BMPはBGR, WBMPはBGRAの順に画素を並べる必要があるのでズレを考慮して代入していく
+                    // BMPはBGR, WBMPはBGRAの順に画素を並べる必要があるのでAの分のズレを考慮して代入していく
+                    // WBMPは1行目から順に値を入れ込んでいく
                     dataArr[row + alphaCount] = bmpData.Data[j];
                     dataArr[row + 1 + alphaCount] = bmpData.Data[j + 1];
                     dataArr[row + 2 + alphaCount] = bmpData.Data[j + 2];
                     dataArr[row + 3 + alphaCount] = DEFAULT_ALPHA;
                     alphaCount += COLORBYTE_RGBA;
 
-                    // もし今読み込んでいる画素の先頭(BGRのBが格納されている位置)が行の最後なら次の行へ向かうフラグを立てる
-                    if (j % stride == stride - pixel - additional)
-                    {
-                        // 行末に補正要素がある場合は0で埋めなければならない
-                        for (int coordinateIndex = 1; coordinateIndex <= additional; coordinateIndex++)
-                        {
-                            dataArr[row + 3 + alphaCount + coordinateIndex] = 0;
-                        }
+                    // カウンタをインクリメント
+                    boundCount++;
 
-                        // 補正要素分だけ次の要素の開始位置(行頭)を調整する必要がある
-
-
-                        shouldContinue = false;
-                    }
+                    // もし今読み込んでいる画素の先頭(BGRのBが格納されている位置)が行の最後なら次の行へ向かう
                 }
+
                 // 行頭に戻るのでAlpha値を入れる位置をリセットする
                 alphaCount = 0;
-                // 次の行となる配列の要素がどこから始まるかを出しておく
+                // 作成しているWBMPデータの次行となる配列の要素がどこから始まるかを出しておく
                 row += width * COLORBYTE_RGBA;
             }
 
@@ -599,8 +667,8 @@ namespace ImageProcessing.Model
         {
             if (dataArr == null)
             {
-                // nullは異常だけど作成して返してあげる
-                return new byte[stride * height];
+                // nullは異常
+                return null;
             }
             // サイズが等しいなら何もしないでそのまま返す
             else if (dataArr.Length == stride * height)
@@ -609,7 +677,7 @@ namespace ImageProcessing.Model
             }
 
             // ストライド*高さで作成する
-            byte[] newDataArr = new byte[stride * height];
+            byte[] newDataArr = CreateDataArray(stride, height);
 
             // 旧データを入れ込んで返す
             for (int i = 0; i < newDataArr.Length; i++)
@@ -624,60 +692,6 @@ namespace ImageProcessing.Model
             }
 
             return newDataArr;
-
         }
-
-        /// <summary>
-        /// BMPのbyte行幅のズレを0で埋める
-        /// </summary>
-        /// <param name="dataArr"></param>
-        /// <param name="stride"></param>
-        /// <returns></returns>
-        private byte[] CorrectBMPWidthArray(byte[] dataArr, int height, int stride, out int shift)
-        {
-            // 新しいストライドを取得する
-            // 1行あたりいくつ0埋めがいるか
-            shift = BMP_WIDTH_BOUNDARY - (stride % BMP_WIDTH_BOUNDARY);
-
-            // 新しいストライド
-            int newStride = stride + shift;
-
-            if (dataArr == null || dataArr.Any() == false)
-            {
-                return null;
-            }
-
-            // 高さ*ズレ埋めだけ配列の要素数を増やす必要がある
-            int additional = shift * height;
-
-            // 新たな配列を作成
-            byte[] correctArr = new byte[dataArr.Length + additional];
-
-            // 行末のズレを0で埋めた補正後のデータ配列を作成する
-            // 行のシフト値のカウンタ
-            int shiftCount = 0;
-            // 元データを順に取り出す
-            for (int dataArrIndex = 0; dataArrIndex < dataArr.Length; dataArrIndex++)
-            {
-                // 補正データの対応する位置は、元データの位置+ズレ*(行数-1)番目
-                correctArr[dataArrIndex + shiftCount] = dataArr[dataArrIndex];
-
-                // 元データの行末に来た場合、ズレのぶんだけ0埋めを行う
-                if (dataArrIndex % stride == stride - 1) //stride
-                {
-                    // 補正データ行末まで0で埋める
-                    for (int addIndex = dataArrIndex + shiftCount + 1; addIndex % newStride != newStride - 1; addIndex++)
-                    {
-                        correctArr[addIndex] = 0;
-                    }
-
-                    shiftCount += shift;
-                }
-
-            }
-
-            return correctArr;
-        }
-
     }
 }

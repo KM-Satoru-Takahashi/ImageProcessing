@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 
 using GongSolutions.Wpf.DragDrop;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace ImageProcessing.Model
 {
@@ -121,11 +122,26 @@ namespace ImageProcessing.Model
         /// </summary>
         /// <returns>右回転した画像のWriteableBMP形式</returns>
         /// <remarks>処理の実体は画処理クラスに定義</remarks>
-        internal WriteableBitmap RightRotate(DropData dropData)
+        internal DropData RightRotate(DropData dropData)
         {
+            if (dropData == null)
+            {
+                return null;
+            }
+
             if (_imageManager != null)
             {
-                return _imageManager.RightRotate(dropData);
+                dropData.ImageData = _imageManager.RightRotate(dropData);
+                // 縦横も変える必要がある
+                byte[] oldWidth = new byte[4];
+                // 旧幅をとっておく
+                Array.Copy(dropData.ImageWidth, 0, oldWidth, 0, 4);
+                // 旧高さを幅に代入
+                Array.Copy(dropData.ImageHeight, 0, dropData.ImageWidth, 0, 4);
+                // 旧幅を高さに代入
+                Array.Copy(oldWidth, 0, dropData.ImageHeight, 0, 4);
+
+                return dropData;
             }
 
             return null;
@@ -170,8 +186,45 @@ namespace ImageProcessing.Model
         {
             // TODO: CheckDropdata みたいなメソッドを作ってupdateDataの正当性をここで担保してもいいかも
             // TODO: ImageManagerにわたす前に他のメソッドでも汎用的に使える可能性があるので
-            return _imageManager.UpdatePixelInfo(updateData, pixelData);
+            return _imageManager.SetPixelInfo(updateData, pixelData);
         }
+
+        /// <summary>
+        /// 入力されたカラーコードから背景色を生成する
+        /// </summary>
+        /// <param name="sender">VMから渡されるパラメタ</param>
+        /// <returns>生成した背景色, エラー時は白色</returns>
+        internal System.Windows.Media.Brush CreateBackgroundColor(object sender)
+        {
+            string s = "";
+
+            string stringR = s.Substring(0, 2);
+            string stringG = s.Substring(2, 2);
+            string stringB = s.Substring(4, 2);
+
+            byte byteR = 0;
+            byte byteG = 0;
+            byte byteB = 0;
+
+            if (byte.TryParse(stringR, System.Globalization.NumberStyles.HexNumber, null, out byteR) == false)
+            {
+                return new SolidColorBrush(Colors.White);
+            }
+            if (byte.TryParse(stringG, System.Globalization.NumberStyles.HexNumber, null, out byteG) == false)
+            {
+                return new SolidColorBrush(Colors.White);
+            }
+            if (byte.TryParse(stringB, System.Globalization.NumberStyles.HexNumber, null, out byteB) == false)
+            {
+                return new SolidColorBrush(Colors.White);
+            }
+
+            // 対応するRGBの作成
+            System.Windows.Media.Brush brush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x00, 0xaa, 0x66));
+
+            return brush;
+        }
+
 
         /// <summary>
         /// 画像ファイルパスから対応する画像オブジェクトの一覧を作成する

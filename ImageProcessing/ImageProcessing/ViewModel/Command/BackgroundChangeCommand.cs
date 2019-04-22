@@ -3,22 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 using System.Windows.Input;
 
 namespace ImageProcessing.ViewModel.Command
 {
     /// <summary>
-    /// 画素更新ボタン押下時に発生するコマンド
+    /// 背景色変更ボタンで実行されるコマンド
     /// </summary>
-   public class UpdateCommand : ICommand
+    public class BackgroundChangeCommand : ICommand
     {
         /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="execute">ボタン押下時関数</param>
         /// <param name="canExecute">ボタン押下可否判定関数</param>
-        public UpdateCommand(Action execute, Func<bool> canExecute)
+        public BackgroundChangeCommand(Action<object> execute, Func<bool> canExecute)
         {
             this.execute = execute;
             this.canExecute = canExecute;
@@ -27,7 +26,7 @@ namespace ImageProcessing.ViewModel.Command
         /// <summary>
         /// ボタン押下時実行関数
         /// </summary>
-        private Action execute;
+        private Action<object> execute;
 
         /// <summary>
         /// ボタン使用可否判定
@@ -67,7 +66,7 @@ namespace ImageProcessing.ViewModel.Command
         /// <remarks>VM側で実体を定義</remarks>
         public void Execute(object parameter)
         {
-            execute();
+            execute(parameter);
         }
     }
 }

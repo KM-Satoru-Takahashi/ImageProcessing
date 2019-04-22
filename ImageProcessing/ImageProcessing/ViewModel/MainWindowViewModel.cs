@@ -9,6 +9,7 @@ using System.Windows;
 using ImageProcessing.Model;
 using ImageProcessing.ViewModel.Command;
 
+using System.Windows.Media;
 using System.Windows.Input;
 
 namespace ImageProcessing.ViewModel
@@ -36,6 +37,11 @@ namespace ImageProcessing.ViewModel
         private PixelDataViewManager _pxlDataViewMng = null;
 
         /// <summary>
+        /// 背景色変更部分管理クラス
+        /// </summary>
+        private BackgroundChangeViewManager _backChangeViewMng = null;
+
+        /// <summary>
         /// ドロップファイルエンティティ
         /// </summary>
         ObservableCollection<Entities.DropData> _dropFiles = null;
@@ -49,6 +55,16 @@ namespace ImageProcessing.ViewModel
         ///  左回転ボタンコマンド
         /// </summary>
         private LeftRotateCommand _leftRotate = null;
+
+        /// <summary>
+        /// 反転ボタン押下時コマンド
+        /// </summary>
+        private FlipCommand _flip = null;
+
+        /// <summary>
+        /// 背景色変更ボタン押下時コマンド
+        /// </summary>
+        private BackgroundChangeCommand _backgroundChange = null;
 
         /// <summary>
         /// D&Dで表示したWBMPオブジェクト(button)に対するコマンド
@@ -128,6 +144,38 @@ namespace ImageProcessing.ViewModel
         }
 
         #endregion
+
+        #region 反転ボタン
+
+        /// <summary>
+        /// 反転ボタン押下時のコマンド
+        /// </summary>
+        public FlipCommand FlipCommand
+        {
+            get
+            {
+                return _flip;
+            }
+            set
+            {
+                _flip = value;
+            }
+        }
+
+        /// <summary>
+        /// 反転ボタン名
+        /// </summary>
+        public string FlipButtonName
+        {
+            get
+            {
+                return _viewManager.Flip;
+            }
+        }
+
+        #endregion
+
+        #region 画素値更新ボタン関連
 
         #region 画素値変更部分固定文言
 
@@ -248,8 +296,6 @@ namespace ImageProcessing.ViewModel
             }
         }
 
-        #region 画素情報
-
         /// <summary>
         /// 画素のX座標
         /// </summary>
@@ -281,7 +327,6 @@ namespace ImageProcessing.ViewModel
                 RaisePropertyChanged("YCoordinate");
             }
         }
-
 
         /// <summary>
         /// 現在のR値
@@ -413,6 +458,146 @@ namespace ImageProcessing.ViewModel
 
         #endregion
 
+        #region 背景色変更関連
+
+        /// <summary>
+        /// 背景色変更ボタン表示文言
+        /// </summary>
+        public string BackgroundChangeButtonName
+        {
+            get
+            {
+                return _backChangeViewMng.BackgroundChangeButtonMessage;
+            }
+        }
+
+        /// <summary>
+        /// 背景色変更領域ラベル表示文言
+        /// </summary>
+        public string BackgroundChangeMessage
+        {
+            get
+            {
+                return _backChangeViewMng.BackgroundChangeMessage;
+            }
+        }
+
+        /// <summary>
+        /// カラーコード入力領域表示文言
+        /// </summary>
+        public string InputColorcodeMessage
+        {
+            get
+            {
+                return _backChangeViewMng.InputColorcodeMessage;
+            }
+        }
+
+        #region 色ボタン
+
+        #region 黒
+
+        public string BlackColorcode
+        {
+            get
+            {
+                return _backChangeViewMng.BlackColorcode;
+            }
+        }
+
+        public Brush BlackColor
+        {
+            get
+            {
+                return _backChangeViewMng.BlackColor;
+            }
+        }
+
+        #endregion
+
+        #region 灰
+
+        public string GrayColorcode
+        {
+            get
+            {
+                return _backChangeViewMng.GrayColorcode;
+            }
+        }
+
+        public Brush GrayColor
+        {
+            get
+            {
+                return _backChangeViewMng.GrayColor;
+            }
+        }
+
+        #endregion
+
+        #region 薄灰
+
+        public string LightgrayColorcode
+        {
+            get
+            {
+                return _backChangeViewMng.LightgrayColorcode;
+            }
+        }
+
+        public Brush LightgrayColor
+        {
+            get
+            {
+                return _backChangeViewMng.LightgrayColor;
+            }
+        }
+
+        #endregion
+
+        #region 白
+
+        public string WhiteColorcode
+        {
+            get
+            {
+                return _backChangeViewMng.WhiteColorcode;
+            }
+        }
+
+        public Brush WhiteColor
+        {
+            get
+            {
+                return _backChangeViewMng.WhiteColor;
+            }
+        }
+
+        #endregion
+
+        #endregion
+
+        /// <summary>
+        /// 入力されたカラーコードに対応する背景色
+        /// </summary>
+        /// <remarks>初期値は白としておく</remarks>
+        public Brush InputColorcodeColor
+        {
+            get;
+            set;
+        } = new SolidColorBrush(Colors.White);
+
+        /// <summary>
+        /// 入力されたカラーコード
+        /// </summary>
+        public string InputColorcode
+        {
+            get;
+            set;
+        }
+
+        #endregion
+
         #region WriteableBitmapオブジェクト表示ボタン
 
         /// <summary>
@@ -463,11 +648,33 @@ namespace ImageProcessing.ViewModel
             _model = new MainWindowModel(this);
             _viewManager = new ButtonViewManager();
             _pxlDataViewMng = new PixelDataViewManager();
+            _backChangeViewMng = new BackgroundChangeViewManager();
             _pixelData = new Entities.PixelData();
+
+            // コマンドの初期化処理
+            CommandInitialize();
+        }
+
+        /// <summary>
+        /// 各ボタンに対応するコマンドの初期化処理
+        /// </summary>
+        /// <remarks>長くなったのでInitializeから分離しただけ</remarks>
+        private void CommandInitialize()
+        {
+            // Grid.Row = 1
             _rightRotate = new RightRotateCommand(RightRotate, IsRightRotateEnabled);
             _leftRotate = new LeftRotateCommand(LeftRotate, IsLeftRotateEnabled);
-            _update = new UpdateCommand(param => { UpdatePixelInfo(param); }, IsUpdateEnabled);
+            _flip = new FlipCommand(Flip, IsFlipEnabled);
+
+            // Grid.Row = 2
+            _update = new UpdateCommand(UpdatePixelInfo, IsUpdateEnabled);
+
+            // Grid.Row = 3
+            // 表示した画像を押下した際の処理
             _wbmp = new WriteableBitmapCommand(param => { ShowPixelInfo(param); }, IsWBMPEnabled);
+
+            // Grid.Row = 4
+            _backgroundChange = new BackgroundChangeCommand(BackgroundChange, IsBackgroundChangeEnabled);
         }
 
         #region 右回転ボタンの登録メソッド
@@ -493,7 +700,9 @@ namespace ImageProcessing.ViewModel
         private void RightRotate()
         {
             // テスト段階なのでとりあえずリストの0番目を渡す
-            _dropFiles[0].ImageData = _model.RightRotate(_dropFiles[0]);
+            Entities.DropData data = _model.RightRotate(_dropFiles[0]);
+            Files.Clear();
+            Files.Add(data);
         }
 
         #endregion
@@ -522,6 +731,57 @@ namespace ImageProcessing.ViewModel
         {
 
         }
+
+        #endregion
+
+        #region 反転ボタンのコマンド
+
+        /// <summary>
+        /// 反転ボタン押下可否
+        /// </summary>
+        /// <returns></returns>
+        private bool IsFlipEnabled()
+        {
+            if (_viewManager != null)
+            {
+                return _viewManager.IsFlipButtonEnabled;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 反転ボタンのコマンド
+        /// </summary>
+        private void Flip()
+        {
+
+        }
+
+        #endregion
+
+        #region 背景色変更ボタン関連
+
+        /// <summary>
+        /// 背景色変更ボタン押下可否
+        /// </summary>
+        /// <returns></returns>
+        private bool IsBackgroundChangeEnabled()
+        {
+            if (_backChangeViewMng != null)
+            {
+                return _backChangeViewMng.IsBackChangeEnabled;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 背景色変更ボタン押下時の処理
+        /// </summary>
+        private void BackgroundChange(object sender)
+        {
+
+        }
+
 
         #endregion
 
@@ -574,7 +834,7 @@ namespace ImageProcessing.ViewModel
         /// <summary>
         /// 更新ボタン押下時の処理
         /// </summary>
-        private void UpdatePixelInfo(object sender)
+        private void UpdatePixelInfo()
         {
             // テスト段階なのでとりあえずリストの先頭要素を更新する
             _dropFiles[0].ImageData = _model.UpdatePixelInfo(_dropFiles[0].ImageData, _pixelData);
@@ -614,6 +874,9 @@ namespace ImageProcessing.ViewModel
         /// <param name="dropInfo"></param>
         public void Drop(IDropInfo dropInfo)
         {
+            // debug: リスト要素を空にする
+            Files.Clear();
+
             if (_model != null)
             {
                 List<Entities.DropData> dropDataList = _model.GetDropFileInfo(dropInfo);

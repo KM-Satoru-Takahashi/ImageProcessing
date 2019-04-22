@@ -83,5 +83,41 @@ namespace ImageProcessing.Model
                 _isLeftButtonEnabled = value;
             }
         }
+
+        /// <summary>
+        /// 反転ボタン
+        /// </summary>
+        private readonly string FLIP = "反転";
+
+        /// <summary>
+        /// 反転ボタン
+        /// </summary>
+        public string Flip
+        {
+            get
+            {
+                return FLIP;
+            }
+        }
+
+        /// <summary>
+        /// 反転ボタン押下可否
+        /// </summary>
+        private bool _isFlipButtonEnabled = true;
+
+        /// <summary>
+        /// 反転ボタン押下可否
+        /// </summary>
+        public bool IsFlipButtonEnabled
+        {
+            get
+            {
+                return _isFlipButtonEnabled;
+            }
+            set
+            {
+                _isFlipButtonEnabled = value;
+            }
+        }
     }
 }

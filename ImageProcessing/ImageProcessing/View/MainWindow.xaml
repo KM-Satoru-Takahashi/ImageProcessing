@@ -17,23 +17,52 @@
         <vm:MainWindowViewModel/>
     </Window.DataContext>
     <Grid>
-        <!--回転ボタン配置-->
-        <Grid Margin="0,0,0,519" Background="Aquamarine" >
-            <Button Content="{Binding Path=RightRotate90ButtonName}" HorizontalAlignment="Left" Margin="90,10,0,0" VerticalAlignment="Top" Width="75" 
-                    Command="{Binding RightRotateCommand}" />
-            <Button Content="{Binding Path=LeftRotate90ButtonName}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="75"
+        <!--入れ子のGridを配置するRowを定義-->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="1.5*"/>
+            <RowDefinition Height="6.5*"/>
+            <RowDefinition Height="1.5*"/>
+        </Grid.RowDefinitions>
+
+        <!--画素更新関連-->
+        <!--ボタン配置-->
+        <Grid Background="Aquamarine" Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="0.5*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="0.5*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.5*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="0.5*"/>
+            </Grid.ColumnDefinitions>
+            <Button Content="{Binding Path=LeftRotate90ButtonName}" Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" Width="75"
                     Command="{Binding LeftRotateCommand}" />
+            <Button Content="{Binding Path=RightRotate90ButtonName}" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" Width="75" 
+                    Command="{Binding RightRotateCommand}" />
+            <Button Content="{Binding Path=FlipButtonName}" Grid.Row="1" Grid.Column="3" HorizontalAlignment="Center" VerticalAlignment="Center" Width="75" 
+                    Command="{Binding FlipCommand}" />
+
 
         </Grid>
 
         <!--クリックした座標の情報表示と編集枠の配置-->
-        <Grid  Margin="0,50,0,409" Background="Turquoise" ShowGridLines="True">
+        <Grid Background="Turquoise" ShowGridLines="False" Grid.Row="1">
             <!--表を定義-->
             <!--横行-->
             <Grid.RowDefinitions>
                 <RowDefinition Height="1*"/>
                 <RowDefinition Height="1*"/>
                 <RowDefinition Height="1*"/>
+                <RowDefinition Height="0.1*"/>
             </Grid.RowDefinitions>
 
             <!--縦列-->
@@ -47,19 +76,20 @@
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="0.25*"/>
             </Grid.ColumnDefinitions>
             <!--値の位置を定義-->
             <!--Row = 0-->
             <!--座標-->
             <Label Content="{Binding XPosition}" Grid.Row="0" Grid.Column="0" HorizontalContentAlignment="Right"/>
-            <Label Content="{Binding XCoordinate}" Grid.Row="0" Grid.Column="1" HorizontalContentAlignment="Center"/>
+            <Label Content="{Binding XCoordinate}" Grid.Row="0" Grid.Column="1" HorizontalContentAlignment="Left"/>
             <Label Content="{Binding YPosition}" Grid.Row="0" Grid.Column="2" HorizontalContentAlignment="Right"/>
-            <Label Content="{Binding YCoordinate}" Grid.Row="0" Grid.Column="3" HorizontalContentAlignment="Center"/>
+            <Label Content="{Binding YCoordinate}" Grid.Row="0" Grid.Column="3" HorizontalContentAlignment="Left"/>
             <!--RGBAラベル-->
-            <Label Content="{Binding Red}" Grid.Row="0" Grid.Column="4" HorizontalContentAlignment="Center"/>
-            <Label Content="{Binding Green}" Grid.Row="0" Grid.Column="5" HorizontalContentAlignment="Center"/>
-            <Label Content="{Binding Blue}" Grid.Row="0" Grid.Column="6" HorizontalContentAlignment="Center"/>
-            <Label Content="{Binding Alpha}" Grid.Row="0" Grid.Column="7" HorizontalContentAlignment="Center"/>
+            <Label Content="{Binding Red}" Grid.Row="0" Grid.Column="4" HorizontalContentAlignment="Center" VerticalContentAlignment="Bottom"/>
+            <Label Content="{Binding Green}" Grid.Row="0" Grid.Column="5" HorizontalContentAlignment="Center" VerticalContentAlignment="Bottom"/>
+            <Label Content="{Binding Blue}" Grid.Row="0" Grid.Column="6" HorizontalContentAlignment="Center" VerticalContentAlignment="Bottom"/>
+            <Label Content="{Binding Alpha}" Grid.Row="0" Grid.Column="7" HorizontalContentAlignment="Center" VerticalContentAlignment="Bottom"/>
             <!--現在の画素値(Row = 1)-->
             <Label Content="{Binding OldPixel}" Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" HorizontalContentAlignment="Right"/>
             <Label Content="{Binding OldRed}" Grid.Row="1" Grid.Column="4" HorizontalContentAlignment="Center"/>
@@ -68,16 +98,16 @@
             <Label Content="{Binding OldAlpha}" Grid.Row="1" Grid.Column="7" HorizontalContentAlignment="Center"/>
             <!--変更後の画素値(Row = 2)-->
             <Label Content="{Binding NewPixel}" Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" HorizontalContentAlignment="Right"/>
-            <TextBox Text="{Binding NewRed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="4" HorizontalContentAlignment="Center" Margin="25,5"/>
-            <TextBox Text="{Binding NewGreen, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="5" HorizontalContentAlignment="Center" Margin="25,5"/>
-            <TextBox Text="{Binding NewBlue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="6" HorizontalContentAlignment="Center" Margin="25,5"/>
-            <TextBox Text="{Binding NewAlpha, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="7" HorizontalContentAlignment="Center" Margin="25,5"/>
+            <TextBox Text="{Binding NewRed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="4" HorizontalContentAlignment="Center" Margin="25,2.5"/>
+            <TextBox Text="{Binding NewGreen, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="5" HorizontalContentAlignment="Center" Margin="25,2.5"/>
+            <TextBox Text="{Binding NewBlue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="6" HorizontalContentAlignment="Center" Margin="25,2.5"/>
+            <TextBox Text="{Binding NewAlpha, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="7" HorizontalContentAlignment="Center" Margin="25,2.5"/>
             <Button Content="{Binding Update}" Grid.Row="2" Grid.Column="8" Command="{Binding UpdateCommand}"/>
         </Grid>
 
         <!--クリックイベントを拾いたいのでグリッドで括る-->
         <!--透明背景を設定しておく-->
-        <Grid Background="Transparent" Margin="0,160,0,0">
+        <Grid Background="Transparent" Grid.Row="2">
             <!--ドロップされたファイルの処理-->
             <!--ファイル情報を有するプロパティを指定-->
             <!--dd:DragDrop.DropHandler="{Binding}でvmへのバインディングを指定-->
@@ -85,7 +115,7 @@
              ItemsSource="{Binding Path=Files}"
              dd:DragDrop.IsDropTarget="True"
              dd:DragDrop.DropHandler="{Binding}" 
-             >
+             Background="{Binding InputColorcodeColor}"   >
                 <!--画面に表示するファイルパスを有するプロパティを指定-->
                 <ListBox.ItemTemplate>
                     <DataTemplate>
@@ -113,5 +143,39 @@
                 </ListBox.ItemTemplate>
             </ListBox>
         </Grid>
+
+        <Grid Grid.Row="3" Background="LightSkyBlue">
+            <Grid.RowDefinitions>
+                <!--0.25は余白-->
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="0.25*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="0.25*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="0.25*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <!--1未満は余白-->
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="0.1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="0.25*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="0.25*"/>
+            </Grid.ColumnDefinitions>
+            <!--文言表示-->
+            <Label Content="{Binding BackgroundChangeMessage}" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" HorizontalAlignment="Center"/>
+            <Label Content="{Binding InputColorcodeMessage}" HorizontalAlignment="Center" Grid.Row="0" Grid.Column="4" Grid.RowSpan="2" Grid.ColumnSpan="3"/>
+            <!--ビルトインされた色に変更する場合のボタン-->
+            <Button Grid.Row="2" Grid.Column="1" Content="{Binding BlackColorcode}" Background="{Binding BlackColor}" Foreground="White" BorderThickness="0"/>
+            <Button Grid.Row="2" Grid.Column="3" Content="{Binding GrayColorcode}" Background="{Binding GrayColor}" Foreground="White" BorderThickness="0"/>
+            <Button Grid.Row="4" Grid.Column="1" Content="{Binding LightgrayColorcode}" Background="{Binding LightgrayColor}" BorderThickness="0"/>
+            <Button Grid.Row="4" Grid.Column="3" Content="{Binding WhiteColorcode}" Background="{Binding WhiteColor}" BorderThickness="0"/>
+            <!--自分でカラーコードを入力する場合-->
+            <TextBox Grid.Row="2" Grid.Column="5" HorizontalContentAlignment="Center" MaxLength="6"/>
+            <Button Content="{Binding BackgroundChangeButtonName}" Grid.Row="4" Grid.Column="5" />
+        </Grid>
+
     </Grid>
 </Window>

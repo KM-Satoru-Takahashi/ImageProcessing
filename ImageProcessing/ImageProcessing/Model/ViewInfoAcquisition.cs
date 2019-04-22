@@ -11,7 +11,7 @@ using System.Windows.Controls;
 namespace ImageProcessing.Model
 {
     /// <summary>
-    /// Viewにおける座標等の情報を取得するクラス
+    /// Viewから与えられた情報を取得するクラス
     /// </summary>
     internal class ViewInfoAcquisition
     {
