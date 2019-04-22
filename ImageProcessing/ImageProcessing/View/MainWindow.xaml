@@ -168,13 +168,18 @@
             <Label Content="{Binding BackgroundChangeMessage}" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" HorizontalAlignment="Center"/>
             <Label Content="{Binding InputColorcodeMessage}" HorizontalAlignment="Center" Grid.Row="0" Grid.Column="4" Grid.RowSpan="2" Grid.ColumnSpan="3"/>
             <!--ビルトインされた色に変更する場合のボタン-->
-            <Button Grid.Row="2" Grid.Column="1" Content="{Binding BlackColorcode}" Background="{Binding BlackColor}" Foreground="White" BorderThickness="0"/>
-            <Button Grid.Row="2" Grid.Column="3" Content="{Binding GrayColorcode}" Background="{Binding GrayColor}" Foreground="White" BorderThickness="0"/>
-            <Button Grid.Row="4" Grid.Column="1" Content="{Binding LightgrayColorcode}" Background="{Binding LightgrayColor}" BorderThickness="0"/>
-            <Button Grid.Row="4" Grid.Column="3" Content="{Binding WhiteColorcode}" Background="{Binding WhiteColor}" BorderThickness="0"/>
+            <Button Grid.Row="2" Grid.Column="1" Content="{Binding BlackColorcode}" Background="{Binding BlackColor}" 
+                    Command="{Binding BackgroundChangeCommand}" CommandParameter="{Binding BlackColorcode}"  Foreground="White" BorderThickness="0"/>
+            <Button Grid.Row="2" Grid.Column="3" Content="{Binding GrayColorcode}" Background="{Binding GrayColor}"
+                    Command="{Binding BackgroundChangeCommand}" CommandParameter="{Binding GrayColorcode}" Foreground="White" BorderThickness="0"/>
+            <Button Grid.Row="4" Grid.Column="1" Content="{Binding LightgrayColorcode}" Background="{Binding LightgrayColor}" 
+                    Command="{Binding BackgroundChangeCommand}" CommandParameter="{Binding LightgrayColorcode}" BorderThickness="0"/>
+            <Button Grid.Row="4" Grid.Column="3" Content="{Binding WhiteColorcode}" Background="{Binding WhiteColor}" 
+                    Command="{Binding BackgroundChangeCommand}" CommandParameter="{Binding WhiteColorcode}" BorderThickness="0"/>
             <!--自分でカラーコードを入力する場合-->
-            <TextBox Grid.Row="2" Grid.Column="5" HorizontalContentAlignment="Center" MaxLength="6"/>
-            <Button Content="{Binding BackgroundChangeButtonName}" Grid.Row="4" Grid.Column="5" />
+            <TextBox Text="{Binding InputColorcode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="5" HorizontalContentAlignment="Center" MaxLength="6"/>
+            <Button Content="{Binding BackgroundChangeButtonName}" Command="{Binding BackgroundChangeCommand}" 
+                    CommandParameter="{Binding InputColorcode}" Grid.Row="4" Grid.Column="5" />
         </Grid>
 
     </Grid>
