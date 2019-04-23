@@ -196,6 +196,11 @@ namespace ImageProcessing.Model
         /// <returns>生成した背景色, エラー時は白色</returns>
         internal System.Windows.Media.Brush CreateBackgroundColor(object sender)
         {
+            if (sender == null)
+            {
+                return new SolidColorBrush(Colors.White);
+            }
+
             string s = "";
 
             string stringR = s.Substring(0, 2);
@@ -220,12 +225,11 @@ namespace ImageProcessing.Model
             }
 
             // 対応するRGBの作成
-            System.Windows.Media.Brush brush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x00, 0xaa, 0x66));
+            System.Windows.Media.Brush brush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(byteR, byteG, byteB));
 
             return brush;
         }
-
-
+        
         /// <summary>
         /// 画像ファイルパスから対応する画像オブジェクトの一覧を作成する
         /// </summary>

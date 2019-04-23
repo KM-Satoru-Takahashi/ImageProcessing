@@ -493,6 +493,21 @@ namespace ImageProcessing.ViewModel
             }
         }
 
+        /// <summary>
+        /// 背景変更ボタン押下時コマンド
+        /// </summary>
+        public BackgroundChangeCommand BackgroundChangeCommand
+        {
+            get
+            {
+                return _backgroundChange;
+            }
+            private set
+            {
+                _backgroundChange = value;
+            }
+        }
+
         #region 色ボタン
 
         #region 黒
@@ -592,8 +607,15 @@ namespace ImageProcessing.ViewModel
         /// </summary>
         public string InputColorcode
         {
-            get;
-            set;
+            get
+            {
+
+            }
+            set
+            {
+
+                RaisePropertyChanged("InputColorcode");
+            }
         }
 
         #endregion
@@ -674,6 +696,7 @@ namespace ImageProcessing.ViewModel
             _wbmp = new WriteableBitmapCommand(param => { ShowPixelInfo(param); }, IsWBMPEnabled);
 
             // Grid.Row = 4
+            // 背景変更ボタン(規定の色ボタンも含む)
             _backgroundChange = new BackgroundChangeCommand(BackgroundChange, IsBackgroundChangeEnabled);
         }
 
@@ -779,7 +802,10 @@ namespace ImageProcessing.ViewModel
         /// </summary>
         private void BackgroundChange(object sender)
         {
-
+            if (_model != null)
+            {
+                InputColorcodeColor = _model.CreateBackgroundColor(sender);
+            }
         }
 
 
