@@ -66,6 +66,8 @@ namespace ImageProcessing.Model
             _dropDatas = new List<DropData>();
         }
 
+        #region ドラッグアンドドロップ
+
         /// <summary>
         /// マウスオーバーされたファイルによってドロップ可不可を判定する
         /// </summary>
@@ -111,125 +113,12 @@ namespace ImageProcessing.Model
             // 対象ファイルパスから画像オブジェクトを生成して内部リストに保持する
             CreateDropData(targetFileList);
 
-            // テストコード
+            // とりあえずフィールドに入れ込んで返す
             _dropDatas = _imageManager.GetBitmapDropData(targetFileList);
 
             return _dropDatas;
         }
 
-        /// <summary>
-        /// 画像右回転処理実行メソッド
-        /// </summary>
-        /// <returns>右回転した画像のWriteableBMP形式</returns>
-        /// <remarks>処理の実体は画処理クラスに定義</remarks>
-        internal DropData RightRotate(DropData dropData)
-        {
-            if (dropData == null)
-            {
-                return null;
-            }
-
-            if (_imageManager != null)
-            {
-                dropData.ImageData = _imageManager.RightRotate(dropData);
-                // 縦横も変える必要がある
-                byte[] oldWidth = new byte[4];
-                // 旧幅をとっておく
-                Array.Copy(dropData.ImageWidth, 0, oldWidth, 0, 4);
-                // 旧高さを幅に代入
-                Array.Copy(dropData.ImageHeight, 0, dropData.ImageWidth, 0, 4);
-                // 旧幅を高さに代入
-                Array.Copy(oldWidth, 0, dropData.ImageHeight, 0, 4);
-
-                return dropData;
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// WBMP画像の押下された位置の画素情報を取得する
-        /// </summary>
-        /// <param name="dropData"></param>
-        /// <param name="sender"></param>
-        /// <returns></returns>
-        internal PixelData GetPixelInfo(DropData dropData, object sender)
-        {
-            PixelData pixelData = new PixelData();
-
-            if (_viewInfoAcquisition == null || dropData == null || sender == null)
-            {
-                return pixelData;
-            }
-            // ターゲット上のマウス座標を取得
-            System.Windows.Point mousePoint = new System.Windows.Point();
-
-            // 変換失敗時
-            // Point(0,0)では判断できない
-            if (_viewInfoAcquisition.GetMousePositionOnButton(sender, out mousePoint) == false)
-            {
-                return pixelData;
-            }
-
-            // 座標から該当する画素値情報を取得する
-            pixelData = _imageManager.GetPixelInfo(dropData.ImageData, mousePoint);
-
-            return pixelData;
-        }
-
-        /// <summary>
-        /// 更新ボタン押下時に指示された画素情報を更新する
-        /// </summary>
-        /// <param name="pixelData"></param>
-        /// <returns></returns>
-        internal WriteableBitmap UpdatePixelInfo(WriteableBitmap updateData, PixelData pixelData)
-        {
-            // TODO: CheckDropdata みたいなメソッドを作ってupdateDataの正当性をここで担保してもいいかも
-            // TODO: ImageManagerにわたす前に他のメソッドでも汎用的に使える可能性があるので
-            return _imageManager.SetPixelInfo(updateData, pixelData);
-        }
-
-        /// <summary>
-        /// 入力されたカラーコードから背景色を生成する
-        /// </summary>
-        /// <param name="sender">VMから渡されるパラメタ</param>
-        /// <returns>生成した背景色, エラー時は白色</returns>
-        internal System.Windows.Media.Brush CreateBackgroundColor(object sender)
-        {
-            if (sender == null)
-            {
-                return new SolidColorBrush(Colors.White);
-            }
-
-            string s = "";
-
-            string stringR = s.Substring(0, 2);
-            string stringG = s.Substring(2, 2);
-            string stringB = s.Substring(4, 2);
-
-            byte byteR = 0;
-            byte byteG = 0;
-            byte byteB = 0;
-
-            if (byte.TryParse(stringR, System.Globalization.NumberStyles.HexNumber, null, out byteR) == false)
-            {
-                return new SolidColorBrush(Colors.White);
-            }
-            if (byte.TryParse(stringG, System.Globalization.NumberStyles.HexNumber, null, out byteG) == false)
-            {
-                return new SolidColorBrush(Colors.White);
-            }
-            if (byte.TryParse(stringB, System.Globalization.NumberStyles.HexNumber, null, out byteB) == false)
-            {
-                return new SolidColorBrush(Colors.White);
-            }
-
-            // 対応するRGBの作成
-            System.Windows.Media.Brush brush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(byteR, byteG, byteB));
-
-            return brush;
-        }
-        
         /// <summary>
         /// 画像ファイルパスから対応する画像オブジェクトの一覧を作成する
         /// </summary>
@@ -288,5 +177,248 @@ namespace ImageProcessing.Model
 
         #endregion
 
+        #region 回転
+
+        /// <summary>
+        /// 画像右回転処理実行メソッド
+        /// </summary>
+        /// <returns>右回転した画像のWriteableBMP形式</returns>
+        /// <remarks>処理の実体は画処理クラスに定義</remarks>
+        internal DropData RightRotate(DropData dropData)
+        {
+            if (dropData == null)
+            {
+                return null;
+            }
+
+            if (_imageManager != null)
+            {
+                dropData.ImageData = _imageManager.RightRotate(dropData);
+                // 縦横も変える必要がある
+                byte[] oldWidth = new byte[4];
+                // 旧幅をとっておく
+                Array.Copy(dropData.ImageWidth, 0, oldWidth, 0, 4);
+                // 旧高さを幅に代入
+                Array.Copy(dropData.ImageHeight, 0, dropData.ImageWidth, 0, 4);
+                // 旧幅を高さに代入
+                Array.Copy(oldWidth, 0, dropData.ImageHeight, 0, 4);
+
+                return dropData;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 画像左回転処理実行メソッド
+        /// </summary>
+        /// <returns>右回転した画像のWriteableBMP形式</returns>
+        /// <remarks>処理の実体は画処理クラスに定義</remarks>
+        internal DropData LeftRotate(DropData dropData)
+        {
+            if (dropData == null)
+            {
+                return null;
+            }
+
+            if (_imageManager != null)
+            {
+                dropData.ImageData = _imageManager.LeftRotate(dropData);
+                // 縦横も変える必要がある
+                byte[] oldWidth = new byte[4];
+                // 旧幅をとっておく
+                Array.Copy(dropData.ImageWidth, 0, oldWidth, 0, 4);
+                // 旧高さを幅に代入
+                Array.Copy(dropData.ImageHeight, 0, dropData.ImageWidth, 0, 4);
+                // 旧幅を高さに代入
+                Array.Copy(oldWidth, 0, dropData.ImageHeight, 0, 4);
+
+                return dropData;
+            }
+
+            return null;
+        }
+
+        #endregion
+
+        #region 画素取得と更新
+
+        /// <summary>
+        /// WBMP画像の押下された位置の画素情報を取得する
+        /// </summary>
+        /// <param name="dropData"></param>
+        /// <param name="sender"></param>
+        /// <returns></returns>
+        internal PixelData GetPixelInfo(DropData dropData, object sender)
+        {
+            PixelData pixelData = new PixelData();
+
+            if (_viewInfoAcquisition == null || dropData == null || sender == null)
+            {
+                return pixelData;
+            }
+            // ターゲット上のマウス座標を取得
+            System.Windows.Point mousePoint = new System.Windows.Point();
+
+            // 変換失敗時
+            // Point(0,0)では判断できない
+            if (_viewInfoAcquisition.GetMousePositionOnButton(sender, out mousePoint) == false)
+            {
+                return pixelData;
+            }
+
+            // 座標から該当する画素値情報を取得する
+            pixelData = _imageManager.GetPixelInfo(dropData.ImageData, mousePoint);
+
+            return pixelData;
+        }
+
+        /// <summary>
+        /// 更新ボタン押下時に指示された画素情報を更新する
+        /// </summary>
+        /// <param name="pixelData"></param>
+        /// <returns></returns>
+        internal WriteableBitmap UpdatePixelInfo(WriteableBitmap updateData, PixelData pixelData)
+        {
+            // TODO: CheckDropdata みたいなメソッドを作ってupdateDataの正当性をここで担保してもいいかも
+            // TODO: ImageManagerにわたす前に他のメソッドでも汎用的に使える可能性があるので
+            return _imageManager.SetPixelInfo(updateData, pixelData);
+        }
+
+        #endregion
+
+        #region 背景色変更
+
+        /// <summary>
+        /// 入力されたカラーコードから背景色を生成する
+        /// </summary>
+        /// <param name="sender">VMから渡されるパラメタ</param>
+        /// <returns>生成した背景色, エラー時は白色</returns>
+        internal System.Windows.Media.Brush CreateBackgroundColor(object sender)
+        {
+            if (sender == null)
+            {
+                return new SolidColorBrush(Colors.White);
+            }
+
+            // 文字列化して扱う
+            string colorcode = sender.ToString();
+
+            // カラーコードは6文字あるはず
+            if (colorcode == null || colorcode.Length != 6)
+            {
+                return new SolidColorBrush(Colors.White);
+            }
+
+            string stringR = colorcode.Substring(0, 2);
+            string stringG = colorcode.Substring(2, 2);
+            string stringB = colorcode.Substring(4, 2);
+
+            byte byteR = 0;
+            byte byteG = 0;
+            byte byteB = 0;
+
+            // 対応するRGBの作成
+            if (byte.TryParse(stringR, System.Globalization.NumberStyles.HexNumber, null, out byteR) == false)
+            {
+                return new SolidColorBrush(Colors.White);
+            }
+            if (byte.TryParse(stringG, System.Globalization.NumberStyles.HexNumber, null, out byteG) == false)
+            {
+                return new SolidColorBrush(Colors.White);
+            }
+            if (byte.TryParse(stringB, System.Globalization.NumberStyles.HexNumber, null, out byteB) == false)
+            {
+                return new SolidColorBrush(Colors.White);
+            }
+
+            // 背景色生成
+            System.Windows.Media.Brush brush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(byteR, byteG, byteB));
+
+            return brush;
+        }
+
+        #endregion
+
+        #region 反転
+
+        /// <summary>
+        /// 画像反転処理(左右)
+        /// </summary>
+        /// <param name="dropData">反転対象の画像データ</param>
+        /// <returns>反転後の画像データ</returns>
+        internal DropData Flip(DropData dropData)
+        {
+            if (dropData == null)
+            {
+                return null;
+            }
+
+            if (_imageManager != null)
+            {
+                int width = BitConverter.ToInt32(dropData.ImageWidth, 0);
+                int height = BitConverter.ToInt32(dropData.ImageHeight, 0);
+                dropData.ImageData = _imageManager.Flip(dropData.ImageData, height, width);
+                return dropData;
+            }
+
+            return null;
+        }
+
+
+        #endregion
+
+        #region 拡縮
+
+        /// <summary>
+        /// 画像拡縮時、コマンドを判断して下流に判断を依頼する
+        /// </summary>
+        /// <param name="dropData"></param>
+        /// <returns>拡縮後のDropDataオブジェクト</returns>
+        internal DropData Scaling(DropData dropData, object sender, string widthPercent, string heightPercent)
+        {
+            if (dropData == null || sender == null)
+            {
+                return null;
+            }
+
+            // 値のパルス
+            double widthScale = 0;
+            double heightScale = 0;
+
+            if (Double.TryParse(widthPercent, out widthScale) == false)
+            {
+                return null;
+            }
+
+            if (Double.TryParse(heightPercent, out heightScale) == false)
+            {
+                return null;
+            }
+
+            InterpolationStyle style = (InterpolationStyle)sender;
+
+            if (_imageManager == null)
+            {
+                return dropData;
+            }
+
+            // 正常に受け取れていれば拡縮処理を依頼する
+            if (style == InterpolationStyle.NearestNeighbor)
+            {
+                return _imageManager.ScalingNearestNeighbor(dropData, widthScale, heightScale);
+            }
+            else if (style == InterpolationStyle.Bilinear)
+            {
+                return _imageManager.ScalingBilinear(dropData, widthScale, heightScale);
+            }
+
+            return null;
+        }
+
+
+        #endregion
+
+        #endregion
     }
 }

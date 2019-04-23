@@ -49,7 +49,7 @@ namespace ImageProcessing.ViewModel.Command
         }
 
         /// <summary>
-        /// ボタン押下時実行関数
+        /// ボタン使用可否判定
         /// </summary>
         /// <param name="parameter"></param>
         /// <returns></returns>
@@ -60,7 +60,7 @@ namespace ImageProcessing.ViewModel.Command
         }
 
         /// <summary>
-        /// ボタン使用可否判定
+        /// ボタン押下時実行関数
         /// </summary>
         /// <param name="parameter"></param>
         /// <remarks>VM側で実体を定義</remarks>

@@ -8,6 +8,7 @@
         xmlns:dd="urn:gong-wpf-dragdrop"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity" 
         xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions" 
+        xmlns:model="clr-namespace:ImageProcessing.Model"
         mc:Ignorable="d"
         Title="ImageProcessing" Height="600" Width="800"
         AllowDrop="True"       
@@ -29,29 +30,37 @@
         <!--ボタン配置-->
         <Grid Background="Aquamarine" Grid.Row="0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="0.5*"/>
+                <RowDefinition Height="0.25*"/>
                 <RowDefinition Height="1*"/>
-                <RowDefinition Height="0.5*"/>
+                <RowDefinition Height="0.25*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="0.25*"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="0.5*"/>
+                <ColumnDefinition Width="0.25*"/>
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="0.25*"/>
                 <ColumnDefinition Width="1*"/>
-                <ColumnDefinition Width="0.5*"/>
+                <ColumnDefinition Width="0.25*"/>
             </Grid.ColumnDefinitions>
-            <Button Content="{Binding Path=LeftRotate90ButtonName}" Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" Width="75"
+            <Button Content="{Binding Path=LeftRotate90ButtonName}" Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" Width="{Binding GeneralContentWidth}"
                     Command="{Binding LeftRotateCommand}" />
-            <Button Content="{Binding Path=RightRotate90ButtonName}" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" Width="75" 
+            <Button Content="{Binding Path=RightRotate90ButtonName}" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" Width="{Binding GeneralContentWidth}" 
                     Command="{Binding RightRotateCommand}" />
-            <Button Content="{Binding Path=FlipButtonName}" Grid.Row="1" Grid.Column="3" HorizontalAlignment="Center" VerticalAlignment="Center" Width="75" 
+            <Button Content="{Binding Path=FlipButtonName}" Grid.Row="1" Grid.Column="3" HorizontalAlignment="Center" VerticalAlignment="Center" Width="{Binding GeneralContentWidth}" 
                     Command="{Binding FlipCommand}" />
-
-
+            <!--拡縮領域-->
+            <Label Grid.Row="1" Grid.Column="5" Content="{Binding HeightPercentLabel}" Padding="10,0" HorizontalAlignment="Right"/>
+            <Label Grid.Row="3" Grid.Column="5" Content="{Binding WidthPersentLabel}" Padding="10,0" HorizontalAlignment="Right" />
+            <TextBox Text="{Binding WidthScale, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1" Grid.Column="6" HorizontalContentAlignment="Center" Width="{Binding SmallContetWidth}" Height="{Binding SmallContetHeight}"/>
+            <TextBox Text="{Binding HeightScale, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="3" Grid.Column="6" HorizontalContentAlignment="Center" Width="{Binding SmallContetWidth}" Height="{Binding SmallContetHeight}"/>
+            <Button Command="{Binding ScalingCommand}" CommandParameter="{x:Static model:InterpolationStyle.NearestNeighbor}" Content="{Binding NearestNeighborButtonMessage}" Grid.Row="1" Grid.Column="8" Width="{Binding GeneralContentWidth}"/>
+            <Button Command="{Binding ScalingCommand}" CommandParameter="{x:Static model:InterpolationStyle.Bilinear}" Content="{Binding BilinearButtonMessage}" Grid.Row="3" Grid.Column="8" Width="{Binding GeneralContentWidth}"/>
         </Grid>
 
         <!--クリックした座標の情報表示と編集枠の配置-->
@@ -86,10 +95,10 @@
             <Label Content="{Binding YPosition}" Grid.Row="0" Grid.Column="2" HorizontalContentAlignment="Right"/>
             <Label Content="{Binding YCoordinate}" Grid.Row="0" Grid.Column="3" HorizontalContentAlignment="Left"/>
             <!--RGBAラベル-->
-            <Label Content="{Binding Red}" Grid.Row="0" Grid.Column="4" HorizontalContentAlignment="Center" VerticalContentAlignment="Bottom"/>
-            <Label Content="{Binding Green}" Grid.Row="0" Grid.Column="5" HorizontalContentAlignment="Center" VerticalContentAlignment="Bottom"/>
-            <Label Content="{Binding Blue}" Grid.Row="0" Grid.Column="6" HorizontalContentAlignment="Center" VerticalContentAlignment="Bottom"/>
-            <Label Content="{Binding Alpha}" Grid.Row="0" Grid.Column="7" HorizontalContentAlignment="Center" VerticalContentAlignment="Bottom"/>
+            <Label Content="{Binding RedLabel}" Grid.Row="0" Grid.Column="4" HorizontalContentAlignment="Center" VerticalContentAlignment="Bottom"/>
+            <Label Content="{Binding GreenLabel}" Grid.Row="0" Grid.Column="5" HorizontalContentAlignment="Center" VerticalContentAlignment="Bottom"/>
+            <Label Content="{Binding BlueLabel}" Grid.Row="0" Grid.Column="6" HorizontalContentAlignment="Center" VerticalContentAlignment="Bottom"/>
+            <Label Content="{Binding AlphaLabel}" Grid.Row="0" Grid.Column="7" HorizontalContentAlignment="Center" VerticalContentAlignment="Bottom"/>
             <!--現在の画素値(Row = 1)-->
             <Label Content="{Binding OldPixel}" Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" HorizontalContentAlignment="Right"/>
             <Label Content="{Binding OldRed}" Grid.Row="1" Grid.Column="4" HorizontalContentAlignment="Center"/>
@@ -98,11 +107,11 @@
             <Label Content="{Binding OldAlpha}" Grid.Row="1" Grid.Column="7" HorizontalContentAlignment="Center"/>
             <!--変更後の画素値(Row = 2)-->
             <Label Content="{Binding NewPixel}" Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" HorizontalContentAlignment="Right"/>
-            <TextBox Text="{Binding NewRed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="4" HorizontalContentAlignment="Center" Margin="25,2.5"/>
-            <TextBox Text="{Binding NewGreen, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="5" HorizontalContentAlignment="Center" Margin="25,2.5"/>
-            <TextBox Text="{Binding NewBlue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="6" HorizontalContentAlignment="Center" Margin="25,2.5"/>
-            <TextBox Text="{Binding NewAlpha, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="7" HorizontalContentAlignment="Center" Margin="25,2.5"/>
-            <Button Content="{Binding Update}" Grid.Row="2" Grid.Column="8" Command="{Binding UpdateCommand}"/>
+            <TextBox Text="{Binding NewRed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="4" HorizontalContentAlignment="Center" Width="{Binding SmallContetWidth}" Height="{Binding SmallContetHeight}"/>
+            <TextBox Text="{Binding NewGreen, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="5" HorizontalContentAlignment="Center" Width="{Binding SmallContetWidth}" Height="{Binding SmallContetHeight}"/>
+            <TextBox Text="{Binding NewBlue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="6" HorizontalContentAlignment="Center" Width="{Binding SmallContetWidth}" Height="{Binding SmallContetHeight}"/>
+            <TextBox Text="{Binding NewAlpha, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="7" HorizontalContentAlignment="Center" Width="{Binding SmallContetWidth}" Height="{Binding SmallContetHeight}"/>
+            <Button Content="{Binding UpdateButtonMessage}" Grid.Row="2" Grid.Column="8" Command="{Binding UpdateCommand}" Width="{Binding GeneralContentWidth}"/>
         </Grid>
 
         <!--クリックイベントを拾いたいのでグリッドで括る-->
@@ -115,7 +124,7 @@
              ItemsSource="{Binding Path=Files}"
              dd:DragDrop.IsDropTarget="True"
              dd:DragDrop.DropHandler="{Binding}" 
-             Background="{Binding InputColorcodeColor}"   >
+             Background="{Binding InputColorcodeColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"   >
                 <!--画面に表示するファイルパスを有するプロパティを指定-->
                 <ListBox.ItemTemplate>
                     <DataTemplate>
@@ -132,12 +141,9 @@
                                         >
                                     <!--Button側でHor/VerをCenterにすることで内部のImageにフィットする-->
                                     <!--表示する画像はFiles.ImageData-->
-                                    <Image Source="{Binding Path=ImageData}" Margin="0" />
+                                    <Image Source="{Binding Path=ImageData}" Margin="0" Stretch="None"/>
                                 </Button>
                             </StackPanel>
-                            <i:Interaction.Triggers>
-
-                            </i:Interaction.Triggers>
                         </ContentControl>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
@@ -168,18 +174,19 @@
             <Label Content="{Binding BackgroundChangeMessage}" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" HorizontalAlignment="Center"/>
             <Label Content="{Binding InputColorcodeMessage}" HorizontalAlignment="Center" Grid.Row="0" Grid.Column="4" Grid.RowSpan="2" Grid.ColumnSpan="3"/>
             <!--ビルトインされた色に変更する場合のボタン-->
+            <!--押下時には変更ボタンのコマンドへ自身のカラーコードを送信して変更操作を実現-->
             <Button Grid.Row="2" Grid.Column="1" Content="{Binding BlackColorcode}" Background="{Binding BlackColor}" 
-                    Command="{Binding BackgroundChangeCommand}" CommandParameter="{Binding BlackColorcode}"  Foreground="White" BorderThickness="0"/>
+                    Command="{Binding BackgroundChangeCommand}" CommandParameter="{Binding BlackColorcode}"  Foreground="White" BorderThickness="0" Width="{Binding GeneralContentWidth}"/>
             <Button Grid.Row="2" Grid.Column="3" Content="{Binding GrayColorcode}" Background="{Binding GrayColor}"
-                    Command="{Binding BackgroundChangeCommand}" CommandParameter="{Binding GrayColorcode}" Foreground="White" BorderThickness="0"/>
+                    Command="{Binding BackgroundChangeCommand}" CommandParameter="{Binding GrayColorcode}" Foreground="White" BorderThickness="0" Width="{Binding GeneralContentWidth}"/>
             <Button Grid.Row="4" Grid.Column="1" Content="{Binding LightgrayColorcode}" Background="{Binding LightgrayColor}" 
-                    Command="{Binding BackgroundChangeCommand}" CommandParameter="{Binding LightgrayColorcode}" BorderThickness="0"/>
+                    Command="{Binding BackgroundChangeCommand}" CommandParameter="{Binding LightgrayColorcode}" BorderThickness="0" Width="{Binding GeneralContentWidth}"/>
             <Button Grid.Row="4" Grid.Column="3" Content="{Binding WhiteColorcode}" Background="{Binding WhiteColor}" 
-                    Command="{Binding BackgroundChangeCommand}" CommandParameter="{Binding WhiteColorcode}" BorderThickness="0"/>
+                    Command="{Binding BackgroundChangeCommand}" CommandParameter="{Binding WhiteColorcode}" BorderThickness="0" Width="{Binding GeneralContentWidth}"/>
             <!--自分でカラーコードを入力する場合-->
-            <TextBox Text="{Binding InputColorcode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="5" HorizontalContentAlignment="Center" MaxLength="6"/>
+            <TextBox Text="{Binding InputColorcode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="5" HorizontalContentAlignment="Center" MaxLength="6" Width="{Binding GeneralContentWidth}"/>
             <Button Content="{Binding BackgroundChangeButtonName}" Command="{Binding BackgroundChangeCommand}" 
-                    CommandParameter="{Binding InputColorcode}" Grid.Row="4" Grid.Column="5" />
+                    CommandParameter="{Binding InputColorcode}" Grid.Row="4" Grid.Column="5" Width="{Binding GeneralContentWidth}" />
         </Grid>
 
     </Grid>

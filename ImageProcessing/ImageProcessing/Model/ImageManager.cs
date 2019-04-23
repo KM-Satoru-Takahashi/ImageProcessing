@@ -58,6 +58,8 @@ namespace ImageProcessing.Model
             _parent = model;
         }
 
+        #region BMPファイル読み込み
+
         /// <summary>
         /// ドロップされたファイルのうち、BMP形式のものについてバイナリとしてデータを得る
         /// </summary>
@@ -95,297 +97,6 @@ namespace ImageProcessing.Model
             }
 
             return dropDatas;
-        }
-
-        /// <summary>
-        /// バイナリデータの右回転処理
-        /// </summary>
-        /// <param name="dropData">回転対称となるデータ</param>
-        /// <returns>右回転した画像データのWriteableBMP形式</returns>
-        internal WriteableBitmap RightRotate(DropData dropData)
-        {
-            if (dropData == null)
-            {
-                return null;
-            }
-
-            // 縦横が入れ替わる
-            int newWidth = BitConverter.ToInt32(dropData.ImageHeight, 0);
-            int newHeight = BitConverter.ToInt32(dropData.ImageWidth, 0);
-
-            // 現在表示されているWBMP画像のバイナリを取得する
-            byte[] oldWBMPBinary = GetWBMPDataArray(dropData.ImageData, COLORBYTE_RGBA);
-            if (oldWBMPBinary == null || oldWBMPBinary.Any() == false)
-            {
-                return null;
-            }
-
-            // 一時的にデータを保存しておくリストを用意する
-            List<byte> tempList = new List<byte>();
-
-            // 旧データのn列目を下側から読んだものが、新データのn行目と対応する
-            // 旧データの列数(新データの行数)だけ繰り返す
-            for (int oldCol = 0; oldCol < newHeight; oldCol++)
-            {
-                // oldCol列目を下側から読んだものが新しい配列のn行目となる
-                // 旧配列における対応する最初の座標(一番下の行の当該列の最初の画素が入っているインデックス)を求める
-                // 最下行に必ず最後の要素があるので、最下行の最後から巻き戻れば値を取得できる
-                int readStartIndex = oldWBMPBinary.Length  // 全要素数を取得
-                                        - (newHeight - oldCol) * COLORBYTE_RGBA; // (旧幅-ほしい列番)*ピクセル数で当該要素まで巻き戻る
-
-                // その列の要素を上まで登っていく
-                for (int element = readStartIndex; element >= 0; element -= newHeight * COLORBYTE_RGBA) // 行のストライドだけ上方に遷移すれば列を求められる
-                {
-                    // tempListへ順に保存していく
-                    tempList.Add(oldWBMPBinary[element]);       // B
-                    tempList.Add(oldWBMPBinary[element + 1]);   // G
-                    tempList.Add(oldWBMPBinary[element + 2]);   // R
-                    tempList.Add(oldWBMPBinary[element + 3]);   // A
-                }
-            }
-
-            // 新たなデータ配列を取得
-            byte[] newImageData = tempList.ToArray();
-
-            if (dropData.ImageData == null)
-            {
-                return null;
-            }
-
-            // WBMPオブジェクトを用意する
-            WriteableBitmap wbmp = new WriteableBitmap
-                (
-                newWidth,
-                newHeight,
-                dropData.HorizontalResolutionDPI,
-                dropData.VerticalResolutionDPI,
-                System.Windows.Media.PixelFormats.Pbgra32, // BGRA32用
-                null // indexつきのbmp以外はnullで良い
-                );
-
-            // WBMPに書き込む            
-            wbmp.WritePixels
-            (
-            new System.Windows.Int32Rect(0, 0, newWidth, newHeight),
-            newImageData,
-            newWidth * COLORBYTE_RGBA, // ストライド：行の要素数*色pixel数
-            0
-            );
-
-            return wbmp;
-
-        }
-
-        /// <summary>
-        /// 表示されている画像データのバイナリ配列から要求された画素を返す
-        /// </summary>
-        /// <returns>画素情報オブジェクト</returns>
-        /// <param name="targetImg">対象画像</param>
-        /// <param name="doublePixelPoint">マウス座標</param>
-        /// <remarks>RGBAの[n]~[n+2]における[n]の位置を返す。異常時は0</remarks>
-        internal PixelData GetPixelInfo(WriteableBitmap targetImg, System.Windows.Point doublePixelPoint)
-        {
-            if (targetImg == null)
-            {
-                return null;
-            }
-
-            // WBMPの画像データを取得する
-            byte[] dataArr = GetWBMPDataArray(targetImg, COLORBYTE_RGBA);
-
-            if (dataArr == null || dataArr.Any() == false)
-            {
-                return null;
-            }
-
-            // マウス座標をintに変換する
-            Point intPixelPoint = ConvertDblPtToIntPt(doublePixelPoint);
-
-            // 画像のバイナリデータ内での位置を取得する
-            int pixelPos = GetPixelPosition(intPixelPoint.X, intPixelPoint.Y, targetImg.PixelWidth, COLORBYTE_RGBA);
-
-            // 画像の領域を超えていれば異常
-            // BGRAであれば、BGRAのBの位置を取得しているのでAの位置まであるかをチェックする必要がある
-            if (dataArr.Length < pixelPos + COLORBYTE_RGBA - 1)
-            {
-                return null;
-            }
-
-            // オブジェクトを生成してwbmpから各値を入れ込んで返す
-            PixelData pixelData = new PixelData();
-            pixelData.XCoordinate = intPixelPoint.X;
-            pixelData.YCoordinate = intPixelPoint.Y;
-            // BGRAの順
-            pixelData.OldBlue = dataArr[pixelPos];
-            pixelData.OldGreen = dataArr[pixelPos + 1];
-            pixelData.OldRed = dataArr[pixelPos + 2];
-            pixelData.OldAlpha = dataArr[pixelPos + 3];
-
-            return pixelData;
-        }
-
-        /// <summary>
-        /// WBMPの指定された画素を渡された画素情報で更新する
-        /// </summary>
-        /// <param name="target">更新対象のWBMP</param>
-        /// <param name="updateData">更新したい画素情報</param>
-        /// <returns>更新したWBMP</returns>
-        internal WriteableBitmap SetPixelInfo(WriteableBitmap target, PixelData updateData)
-        {
-            if (target == null || updateData == null)
-            {
-                return null;
-            }
-
-            // WBMPの画像データを取得する
-            byte[] dataArr = GetWBMPDataArray(target, COLORBYTE_RGBA);
-
-            if (dataArr == null || dataArr.Any() == false)
-            {
-                return null;
-            }
-
-            // 画像のバイナリデータ内での位置を取得する
-            int pixelPos = GetPixelPosition(updateData.XCoordinate, updateData.YCoordinate, target.PixelWidth, COLORBYTE_RGBA);
-
-            return UpdateWBMPPixel(target, dataArr, pixelPos, updateData);
-        }
-
-        /// <summary>
-        /// 与えられたBMPオブジェクトを指定された画素データで更新する
-        /// </summary>
-        /// <param name="targetWBMP">更新対象のWBMPデータ</param> 
-        /// <param name="targetArr">更新対象のWBMPデータ配列</param>
-        /// <param name="pixelPosition">更新開始バイナリ位置</param>
-        /// <param name="pixelData">更新データ</param>
-        /// <returns>更新したWBMPオブジェクト</returns>
-        private WriteableBitmap UpdateWBMPPixel(WriteableBitmap targetWBMP, byte[] targetArr, int pixelPosition, PixelData pixelData)
-        {
-            // 引数オブジェクトのnullチェック
-            if (targetWBMP == null || pixelData == null)
-            {
-                return null;
-            }
-            // 引数配列のnullチェック
-            else if (targetArr == null || targetArr.Any() == false)
-            {
-                return null;
-            }
-            // 画像の領域を超えていれば異常
-            // BGRAであれば、BGRAのBの位置を取得しているのでAの位置まであるかをチェックする必要がある
-            else if (targetArr.Length < pixelPosition + COLORBYTE_RGBA - 1)
-            {
-                return null;
-            }
-
-            // 値の埋め込み
-            targetArr[pixelPosition] = pixelData.NewBlue;       // B
-            targetArr[pixelPosition + 1] = pixelData.NewGreen;  // G
-            targetArr[pixelPosition + 2] = pixelData.NewRed;    // R
-            targetArr[pixelPosition + 3] = pixelData.NewAlpha;  // A
-
-            // wbmpに書き込む
-            targetWBMP.WritePixels
-            (
-            new System.Windows.Int32Rect(0, 0, targetWBMP.PixelWidth, targetWBMP.PixelHeight),
-            targetArr,
-            targetWBMP.PixelWidth * COLORBYTE_RGBA,
-            0
-            );
-
-            return targetWBMP;
-        }
-
-
-        /// <summary>
-        /// 渡されたWBMPオブジェクトのバイナリデータを取得する
-        /// </summary>
-        /// <param name="target">バイナリデータを取得したいWBMP</param>
-        /// <returns>WBMPのバイナリデータ</returns>
-        private byte[] GetWBMPDataArray(WriteableBitmap target, int colorByte)
-        {
-            // 現在表示されている画像の縦横を取得
-            int wbmpWidth = target.PixelWidth;
-            int wbmpHeight = target.PixelHeight;
-
-            // wbmpの画像データを取得するための配列を用意する
-            byte[] dataArr = CreateDataArray(wbmpWidth, wbmpHeight, colorByte);
-
-            // wbmpの画像情報を取得する
-            target.CopyPixels(dataArr, wbmpWidth * colorByte, 0);
-
-            return dataArr;
-        }
-
-        /// <summary>
-        /// 座標情報と画像の表示幅から、その地点の画素情報が配列の何番目かを取得する
-        /// </summary>
-        /// <param name="xCoordinate">画像のX座標</param>
-        /// <param name="yCoordinate">画像のY座標</param>
-        /// <param name="width">画像の幅(pixel)</param>
-        /// <param name="colorByte">1画素あたりの画素数(例:RGBなら3)</param>
-        /// <returns>バイナリデータ上での対象画素情報開始位置(0~)</returns>
-        private int GetPixelPosition(int xCoordinate, int yCoordinate, int width, int colorByte)
-        {
-            return ((yCoordinate * width) + xCoordinate) * colorByte;
-        }
-
-
-        /// <summary>
-        /// 指定した画像をバイナリデータとして代入可能な空のbyte[]を作成する
-        /// </summary>
-        /// <param name="target"></param>
-        /// <param name="colorByte"></param>
-        /// <returns></returns>
-        private byte[] CreateDataArray(WriteableBitmap target, int colorByte)
-        {
-            if (target == null)
-            {
-                return null;
-            }
-            else
-            {
-                return CreateDataArray(target.PixelWidth, target.PixelHeight, colorByte);
-            }
-        }
-
-        /// <summary>
-        /// 指定した画像の情報を代入可能な、空のbyte[]を作成する
-        /// </summary>
-        /// <param name="width">画像幅(pixel単位)</param>
-        /// <param name="height">画像高さ(pixel単位)</param>
-        /// <param name="colorByte">1pixelあたりの画素数</param>
-        /// <returns></returns>
-        private byte[] CreateDataArray(int width, int height, int colorByte)
-        {
-            return CreateDataArray(width * colorByte, height);
-        }
-
-        /// <summary>
-        /// 指定した画像の情報を代入可能な、空のbyte[]を作成する
-        /// </summary>
-        /// <param name="stride">画像ストライド(幅*pixel)</param>
-        /// <param name="height">画像高さ</param>
-        /// <returns></returns>
-        private byte[] CreateDataArray(int stride, int height)
-        {
-
-            return new byte[stride * height];
-        }
-
-        /// <summary>
-        /// double型PointをInt型Pointに置換する(小数以下切り捨て)
-        /// </summary>
-        /// <param name="dblPt">System.Windows.Pointオブジェクト</param>
-        /// <returns>System.Drawing.Pointオブジェクト</returns>
-        private Point ConvertDblPtToIntPt(System.Windows.Point dblPt)
-        {
-            Point intPt = new Point();
-
-            intPt.X = (int)dblPt.X;
-            intPt.Y = (int)dblPt.Y;
-
-            return intPt;
         }
 
         /// <summary>
@@ -526,6 +237,467 @@ namespace ImageProcessing.Model
             return dropData;
         }
 
+        #endregion
+
+        #region 回転
+
+        /// <summary>
+        /// バイナリデータの右回転処理
+        /// </summary>
+        /// <param name="dropData">回転対称となるデータ</param>
+        /// <returns>右回転した画像データのWriteableBMP形式</returns>
+        internal WriteableBitmap RightRotate(DropData dropData)
+        {
+            if (dropData == null)
+            {
+                return null;
+            }
+
+            // 縦横が入れ替わる
+            int newWidth = BitConverter.ToInt32(dropData.ImageHeight, 0);
+            int newHeight = BitConverter.ToInt32(dropData.ImageWidth, 0);
+
+            // 現在表示されているWBMP画像のバイナリを取得する
+            byte[] oldWBMPBinary = GetWBMPDataArray(dropData.ImageData, COLORBYTE_RGBA);
+            if (oldWBMPBinary == null || oldWBMPBinary.Any() == false)
+            {
+                return null;
+            }
+
+            // 一時的にデータを保存しておくリストを用意する
+            List<byte> tempList = new List<byte>();
+
+            // 旧データのn列目を下側から読んだものが、新データのn行目と対応する
+            // 旧データの列数(新データの行数)だけ繰り返す
+            for (int oldCol = 0; oldCol < newHeight; oldCol++)
+            {
+                // oldCol列目を下側から読んだものが新しい配列のn行目となる
+                // 旧配列における対応する最初の座標(一番下の行の当該列の最初の画素が入っているインデックス)を求める
+                // 最下行に必ず最後の要素があるので、最下行の最後から巻き戻れば値を取得できる
+                int readStartIndex = oldWBMPBinary.Length  // 全要素数を取得
+                                        - (newHeight - oldCol) * COLORBYTE_RGBA; // (旧幅-ほしい列番)*ピクセル数で当該要素まで巻き戻る
+
+                // その列の要素を上まで登っていく
+                for (int element = readStartIndex; element >= 0; element -= newHeight * COLORBYTE_RGBA) // 行のストライドだけ上方に遷移すれば列を求められる
+                {
+                    // tempListへ順に保存していく
+                    tempList.Add(oldWBMPBinary[element]);       // B
+                    tempList.Add(oldWBMPBinary[element + 1]);   // G
+                    tempList.Add(oldWBMPBinary[element + 2]);   // R
+                    tempList.Add(oldWBMPBinary[element + 3]);   // A
+                }
+            }
+
+            // 新たなデータ配列を取得
+            byte[] newImageData = tempList.ToArray();
+
+            if (dropData.ImageData == null)
+            {
+                return null;
+            }
+
+            // WBMPオブジェクトを用意する
+            WriteableBitmap wbmp = new WriteableBitmap
+                (
+                newWidth,
+                newHeight,
+                dropData.HorizontalResolutionDPI,
+                dropData.VerticalResolutionDPI,
+                System.Windows.Media.PixelFormats.Pbgra32, // BGRA32用
+                null // indexつきのbmp以外はnullで良い
+                );
+
+            // WBMPに書き込む            
+            wbmp.WritePixels
+            (
+            new System.Windows.Int32Rect(0, 0, newWidth, newHeight),
+            newImageData,
+            newWidth * COLORBYTE_RGBA, // ストライド：行の要素数*色pixel数
+            0
+            );
+
+            return wbmp;
+        }
+
+        /// <summary>
+        /// バイナリデータの左回転処理
+        /// </summary>
+        /// <param name="dropData">回転対称となるデータ</param>
+        /// <returns>左回転した画像データのWriteableBMP形式</returns>
+        internal WriteableBitmap LeftRotate(DropData dropData)
+        {
+            if (dropData == null)
+            {
+                return null;
+            }
+
+            // 縦横が入れ替わる
+            int newWidth = BitConverter.ToInt32(dropData.ImageHeight, 0);
+            int newHeight = BitConverter.ToInt32(dropData.ImageWidth, 0);
+
+            // 現在表示されているWBMP画像のバイナリを取得する
+            byte[] oldWBMPBinary = GetWBMPDataArray(dropData.ImageData, COLORBYTE_RGBA);
+            if (oldWBMPBinary == null || oldWBMPBinary.Any() == false)
+            {
+                return null;
+            }
+
+            // 一時的にデータを保存しておくリストを用意する
+            List<byte> tempList = new List<byte>();
+
+            // 旧データの(width-n)列目(最後からn列目)を上から読んだものが、新しい配列のn行目になる
+            // 旧データの列数(新データの行数)だけ繰り返す
+            for (int oldCol = newHeight; 0 < oldCol; oldCol--)
+            {
+                // 旧データの最後からoldCol列目を上から読んだものが新しい配列のn行目になる
+                int readStartIndex = oldCol * 4  // 旧列の先頭から読み取る
+                                                - COLORBYTE_RGBA;   // 当該要素の先頭からBGRAを読むため巻き戻しておく
+
+                // 配列の要素範囲内にある間、旧データのストライドだけ下に遷移し続ける
+                for (int element = readStartIndex; element < oldWBMPBinary.Length - 1; element += newHeight * COLORBYTE_RGBA)
+                {
+                    // tempListへ順に値を代入する
+                    tempList.Add(oldWBMPBinary[element]);       // B
+                    tempList.Add(oldWBMPBinary[element + 1]);   // G
+                    tempList.Add(oldWBMPBinary[element + 2]);   // R
+                    tempList.Add(oldWBMPBinary[element + 3]);   // A
+                }
+            }
+
+            // 新たなデータ配列を取得
+            byte[] newImageData = tempList.ToArray();
+
+            if (dropData.ImageData == null)
+            {
+                return null;
+            }
+
+            // WBMPオブジェクトを用意する
+            WriteableBitmap wbmp = new WriteableBitmap
+                (
+                newWidth,
+                newHeight,
+                dropData.HorizontalResolutionDPI,
+                dropData.VerticalResolutionDPI,
+                System.Windows.Media.PixelFormats.Pbgra32, // BGRA32用
+                null // indexつきのbmp以外はnullで良い
+                );
+
+            // WBMPに書き込む            
+            wbmp.WritePixels
+            (
+            new System.Windows.Int32Rect(0, 0, newWidth, newHeight),
+            newImageData,
+            newWidth * COLORBYTE_RGBA, // ストライド：行の要素数*色pixel数
+            0
+            );
+
+            return wbmp;
+        }
+
+        #endregion
+
+        #region 画素取得と更新
+
+        /// <summary>
+        /// 表示されている画像データのバイナリ配列から要求された画素を返す
+        /// </summary>
+        /// <returns>画素情報オブジェクト</returns>
+        /// <param name="targetImg">対象画像</param>
+        /// <param name="doublePixelPoint">マウス座標</param>
+        /// <remarks>RGBAの[n]~[n+2]における[n]の位置を返す。異常時は0</remarks>
+        internal PixelData GetPixelInfo(WriteableBitmap targetImg, System.Windows.Point doublePixelPoint)
+        {
+            if (targetImg == null)
+            {
+                return null;
+            }
+
+            // WBMPの画像データを取得する
+            byte[] dataArr = GetWBMPDataArray(targetImg, COLORBYTE_RGBA);
+
+            if (dataArr == null || dataArr.Any() == false)
+            {
+                return null;
+            }
+
+            // マウス座標をintに変換する
+            Point intPixelPoint = ConvertDblPtToIntPt(doublePixelPoint);
+
+            // 画像のバイナリデータ内での位置を取得する
+            int pixelPos = GetPixelPosition(intPixelPoint.X, intPixelPoint.Y, targetImg.PixelWidth, COLORBYTE_RGBA);
+
+            // 画像の領域を超えていれば異常
+            // BGRAであれば、BGRAのBの位置を取得しているのでAの位置まであるかをチェックする必要がある
+            if (dataArr.Length < pixelPos + COLORBYTE_RGBA - 1)
+            {
+                return null;
+            }
+
+            // オブジェクトを生成してwbmpから各値を入れ込んで返す
+            PixelData pixelData = new PixelData();
+            pixelData.XCoordinate = intPixelPoint.X;
+            pixelData.YCoordinate = intPixelPoint.Y;
+            // BGRAの順
+            pixelData.OldBlue = dataArr[pixelPos];
+            pixelData.OldGreen = dataArr[pixelPos + 1];
+            pixelData.OldRed = dataArr[pixelPos + 2];
+            pixelData.OldAlpha = dataArr[pixelPos + 3];
+
+            return pixelData;
+        }
+
+        /// <summary>
+        /// WBMPの指定された画素を渡された画素情報で更新する
+        /// </summary>
+        /// <param name="target">更新対象のWBMP</param>
+        /// <param name="updateData">更新したい画素情報</param>
+        /// <returns>更新したWBMP</returns>
+        internal WriteableBitmap SetPixelInfo(WriteableBitmap target, PixelData updateData)
+        {
+            if (target == null || updateData == null)
+            {
+                return null;
+            }
+
+            // WBMPの画像データを取得する
+            byte[] dataArr = GetWBMPDataArray(target, COLORBYTE_RGBA);
+
+            if (dataArr == null || dataArr.Any() == false)
+            {
+                return null;
+            }
+
+            // 画像のバイナリデータ内での位置を取得する
+            int pixelPos = GetPixelPosition(updateData.XCoordinate, updateData.YCoordinate, target.PixelWidth, COLORBYTE_RGBA);
+
+            return UpdateWBMPPixel(target, dataArr, pixelPos, updateData);
+        }
+
+        /// <summary>
+        /// 与えられたBMPオブジェクトを指定された画素データで更新する
+        /// </summary>
+        /// <param name="targetWBMP">更新対象のWBMPデータ</param> 
+        /// <param name="targetArr">更新対象のWBMPデータ配列</param>
+        /// <param name="pixelPosition">更新開始バイナリ位置</param>
+        /// <param name="pixelData">更新データ</param>
+        /// <returns>更新したWBMPオブジェクト</returns>
+        private WriteableBitmap UpdateWBMPPixel(WriteableBitmap targetWBMP, byte[] targetArr, int pixelPosition, PixelData pixelData)
+        {
+            // 引数オブジェクトのnullチェック
+            if (targetWBMP == null || pixelData == null)
+            {
+                return null;
+            }
+            // 引数配列のnullチェック
+            else if (targetArr == null || targetArr.Any() == false)
+            {
+                return null;
+            }
+            // 画像の領域を超えていれば異常
+            // BGRAであれば、BGRAのBの位置を取得しているのでAの位置まであるかをチェックする必要がある
+            else if (targetArr.Length < pixelPosition + COLORBYTE_RGBA - 1)
+            {
+                return null;
+            }
+
+            // 値の埋め込み
+            targetArr[pixelPosition] = pixelData.NewBlue;       // B
+            targetArr[pixelPosition + 1] = pixelData.NewGreen;  // G
+            targetArr[pixelPosition + 2] = pixelData.NewRed;    // R
+            targetArr[pixelPosition + 3] = pixelData.NewAlpha;  // A
+
+            // wbmpに書き込む
+            targetWBMP.WritePixels
+            (
+            new System.Windows.Int32Rect(0, 0, targetWBMP.PixelWidth, targetWBMP.PixelHeight),
+            targetArr,
+            targetWBMP.PixelWidth * COLORBYTE_RGBA,
+            0
+            );
+
+            return targetWBMP;
+        }
+
+        /// <summary>
+        /// 座標情報と画像の表示幅から、その地点の画素情報が配列の何番目かを取得する
+        /// </summary>
+        /// <param name="xCoordinate">画像のX座標</param>
+        /// <param name="yCoordinate">画像のY座標</param>
+        /// <param name="width">画像の幅(pixel)</param>
+        /// <param name="colorByte">1画素あたりの画素数(例:RGBなら3)</param>
+        /// <returns>バイナリデータ上での対象画素情報開始位置(0~)</returns>
+        private int GetPixelPosition(int xCoordinate, int yCoordinate, int width, int colorByte)
+        {
+            return ((yCoordinate * width) + xCoordinate) * colorByte;
+        }
+
+        #endregion
+
+        #region 反転
+
+        /// <summary>
+        ///  画像反転処理(左右)
+        /// </summary>
+        /// <param name="targetImg">反転対象のWBMPデータ</param>
+        /// <returns></returns>
+        internal WriteableBitmap Flip(WriteableBitmap targetImg, int height, int width)
+        {
+            if (targetImg == null)
+            {
+                return null;
+            }
+
+            // 現在表示されているWBMP画像のバイナリを取得する
+            byte[] oldWBMPBinary = GetWBMPDataArray(targetImg, COLORBYTE_RGBA);
+
+            // 一時的にデータを入れ込んでおくリスト
+            List<byte> tempList = new List<byte>();
+
+            // 旧データの1行目から最後の行までを順に読んでいく
+            for (int oldRow = 0; oldRow < height; oldRow++)
+            {
+                // oldRowの列を最後から順に読んで行けばよい
+                for (int oldCol = width; 0 < oldCol; oldCol--)
+                {
+                    int readStartPosition = oldCol * COLORBYTE_RGBA - COLORBYTE_RGBA    // この列の要素の先頭
+                                                    + oldRow * width * COLORBYTE_RGBA;   // 行数を加味する
+
+                    // BGRAの順に入れ込んでいく
+                    tempList.Add(oldWBMPBinary[readStartPosition]);
+                    tempList.Add(oldWBMPBinary[readStartPosition + 1]);
+                    tempList.Add(oldWBMPBinary[readStartPosition + 2]);
+                    tempList.Add(oldWBMPBinary[readStartPosition + 3]);
+
+                }
+            }
+
+            // WBMPに書き込む
+            targetImg.WritePixels
+                (
+                new System.Windows.Int32Rect(0, 0, width, height),
+                tempList.ToArray(),
+                width * COLORBYTE_RGBA, // ストライド：行の要素数*色pixel数
+                0
+                );
+
+            return targetImg;
+        }
+
+        #endregion
+
+        #region 拡縮
+
+        /// <summary>
+        /// NearestNeighbor/最近傍法による画像の拡縮処理
+        /// </summary>
+        /// <param name="dropData"></param>
+        /// <param name="widthPercent"></param>
+        /// <param name="heightPercent"></param>
+        /// <returns></returns>
+        internal DropData ScalingNearestNeighbor(DropData dropData, double widthPercent, double heightPercent)
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// Bilinear/線形補間法による画像の拡縮処理
+        /// </summary>
+        /// <param name="dropData"></param>
+        /// <param name="widthPercent"></param>
+        /// <param name="heightPercent"></param>
+        /// <returns></returns>
+        internal DropData ScalingBilinear(DropData dropData, double widthPercent, double heightPercent)
+        {
+            return null;
+        }
+
+
+        #endregion
+
+        /// <summary>
+        /// 渡されたWBMPオブジェクトのバイナリデータを取得する
+        /// </summary>
+        /// <param name="target">バイナリデータを取得したいWBMP</param>
+        /// <returns>WBMPのバイナリデータ</returns>
+        private byte[] GetWBMPDataArray(WriteableBitmap target, int colorByte)
+        {
+            // 現在表示されている画像の縦横を取得
+            int wbmpWidth = target.PixelWidth;
+            int wbmpHeight = target.PixelHeight;
+
+            // wbmpの画像データを取得するための配列を用意する
+            byte[] dataArr = CreateDataArray(wbmpWidth, wbmpHeight, colorByte);
+
+            // wbmpの画像情報を取得する
+            target.CopyPixels(dataArr, wbmpWidth * colorByte, 0);
+
+            return dataArr;
+        }
+
+        #region CreateDataArray
+
+        /// <summary>
+        /// 指定した画像をバイナリデータとして代入可能な空のbyte[]を作成する
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="colorByte"></param>
+        /// <returns></returns>
+        private byte[] CreateDataArray(WriteableBitmap target, int colorByte)
+        {
+            if (target == null)
+            {
+                return null;
+            }
+            else
+            {
+                return CreateDataArray(target.PixelWidth, target.PixelHeight, colorByte);
+            }
+        }
+
+        /// <summary>
+        /// 指定した画像の情報を代入可能な、空のbyte[]を作成する
+        /// </summary>
+        /// <param name="width">画像幅(pixel単位)</param>
+        /// <param name="height">画像高さ(pixel単位)</param>
+        /// <param name="colorByte">1pixelあたりの画素数</param>
+        /// <returns></returns>
+        private byte[] CreateDataArray(int width, int height, int colorByte)
+        {
+            return CreateDataArray(width * colorByte, height);
+        }
+
+        /// <summary>
+        /// 指定した画像の情報を代入可能な、空のbyte[]を作成する
+        /// </summary>
+        /// <param name="stride">画像ストライド(幅*pixel)</param>
+        /// <param name="height">画像高さ</param>
+        /// <returns></returns>
+        private byte[] CreateDataArray(int stride, int height)
+        {
+
+            return new byte[stride * height];
+        }
+
+        #endregion
+
+        /// <summary>
+        /// double型PointをInt型Pointに置換する(小数以下切り捨て)
+        /// </summary>
+        /// <param name="dblPt">System.Windows.Pointオブジェクト</param>
+        /// <returns>System.Drawing.Pointオブジェクト</returns>
+        private Point ConvertDblPtToIntPt(System.Windows.Point dblPt)
+        {
+            Point intPt = new Point();
+
+            intPt.X = (int)dblPt.X;
+            intPt.Y = (int)dblPt.Y;
+
+            return intPt;
+        }
+
+        #region ConversionDMPtoDPI
+
         /// <summary>
         /// 解像度のDPM値をDPI値に変換する(バイナリデータ)
         /// </summary>
@@ -549,6 +721,8 @@ namespace ImageProcessing.Model
         {
             return dpm * INCH / METER;
         }
+
+        #endregion
 
         /// <summary>
         /// BMPのバイナリデータからWriteableBitmapデータを作成する
@@ -616,7 +790,7 @@ namespace ImageProcessing.Model
             // WBMPへ代入する際のデータ行が何行目かを見るカウンタ
             int row = 0;
 
-            // 元のデータ配列の最下行からスタートし、1行ずつ上にいく
+            // 元のデータ配列の最下行の先頭からスタートし、1行ずつ上にいく
             for (int i = bmpData.Data.Length - stride; i >= 0; i -= stride)
             {
                 // BMPの境界の0埋めを判定するためのカウンタ

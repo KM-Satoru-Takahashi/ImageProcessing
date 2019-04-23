@@ -29,17 +29,17 @@ namespace ImageProcessing.ViewModel
         /// <summary>
         /// ボタン表示文言管理クラス
         /// </summary>
-        private ButtonViewManager _viewManager = null;
+        private ImageProcessingRegionViewManager _imgProcessingViewMng = null;
 
         /// <summary>
         /// 画素コントロール部分表示文言管理クラス
         /// </summary>
-        private PixelDataViewManager _pxlDataViewMng = null;
+        private PixelDataDisplayRegionViewManager _pxlDataViewMng = null;
 
         /// <summary>
         /// 背景色変更部分管理クラス
         /// </summary>
-        private BackgroundChangeViewManager _backChangeViewMng = null;
+        private BackgroundChangeRegionViewManager _backChangeViewMng = null;
 
         /// <summary>
         /// ドロップファイルエンティティ
@@ -52,7 +52,7 @@ namespace ImageProcessing.ViewModel
         private RightRotateCommand _rightRotate = null;
 
         /// <summary>
-        ///  左回転ボタンコマンド
+        /// 左回転ボタンコマンド
         /// </summary>
         private LeftRotateCommand _leftRotate = null;
 
@@ -60,6 +60,11 @@ namespace ImageProcessing.ViewModel
         /// 反転ボタン押下時コマンド
         /// </summary>
         private FlipCommand _flip = null;
+
+        /// <summary>
+        /// 画像拡縮ボタン押下時コマンド
+        /// </summary>
+        private ScalingCommand _scaling = null;
 
         /// <summary>
         /// 背景色変更ボタン押下時コマンド
@@ -85,6 +90,23 @@ namespace ImageProcessing.ViewModel
 
         #region プロパティ
 
+        /// <summary>
+        /// 通常のボタンやテキストブロックの幅
+        /// </summary>
+        public int GeneralContentWidth { get; } = 75;
+
+        /// <summary>
+        /// 小さめのボタンやテキストブロックの幅
+        /// </summary>
+        public int SmallContetWidth { get; } = 40;
+
+        /// <summary>
+        /// 小さめのボタンやテキストブロックの高さ
+        /// </summary>
+        public int SmallContetHeight { get; } = 20;
+
+        #region 画像処理領域
+
         #region 右回転ボタン
 
         /// <summary>
@@ -109,7 +131,7 @@ namespace ImageProcessing.ViewModel
         {
             get
             {
-                return _viewManager.RightRotate90;
+                return _imgProcessingViewMng.RightRotate90;
             }
         }
 
@@ -139,7 +161,7 @@ namespace ImageProcessing.ViewModel
         {
             get
             {
-                return _viewManager.LeftRotate90;
+                return _imgProcessingViewMng.LeftRotate90;
             }
         }
 
@@ -169,9 +191,93 @@ namespace ImageProcessing.ViewModel
         {
             get
             {
-                return _viewManager.Flip;
+                return _imgProcessingViewMng.Flip;
             }
         }
+
+        #endregion
+
+        #region 拡縮
+
+        /// <summary>
+        /// 拡縮ボタン押下時コマンド
+        /// </summary>
+        public ScalingCommand ScalingCommand
+        {
+            get
+            {
+                return _scaling;
+            }
+            set
+            {
+                _scaling = value;
+            }
+        }
+
+
+        /// <summary>
+        /// 最近傍法ボタン表示文言
+        /// </summary>
+        public string NearestNeighborButtonMessage
+        {
+            get
+            {
+                return _imgProcessingViewMng.NearestNeighborButtonMessage;
+            }
+        }
+
+        /// <summary>
+        /// 線形補間法ボタン表示文言
+        /// </summary>
+        public string BilinearButtonMessage
+        {
+            get
+            {
+                return _imgProcessingViewMng.BilinearButtonMessage;
+            }
+        }
+
+        /// <summary>
+        /// 幅(%)文言
+        /// </summary>
+        public string WidthPersentLabel
+        {
+            get
+            {
+                return _imgProcessingViewMng.WidthPercent;
+            }
+        }
+
+        /// <summary>
+        /// 高さ(%)文言
+        /// </summary>
+        public string HeightPercentLabel
+        {
+            get
+            {
+                return _imgProcessingViewMng.HeightPercent;
+            }
+        }
+
+        /// <summary>
+        /// 入力された幅
+        /// </summary>
+        public string WidthScale
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// 入力された高さ
+        /// </summary>
+        public string HeightScale
+        {
+            get;
+            set;
+        }
+
+        #endregion
 
         #endregion
 
@@ -226,58 +332,57 @@ namespace ImageProcessing.ViewModel
         /// <summary>
         /// "R"表示
         /// </summary>
-        public string Red
+        public string RedLabel
         {
             get
             {
-                return _pxlDataViewMng.Red;
+                return _pxlDataViewMng.RedLabel;
             }
         }
 
         /// <summary>
         /// "G"表示
         /// </summary>
-        public string Green
+        public string GreenLabel
         {
             get
             {
-                return _pxlDataViewMng.Green;
+                return _pxlDataViewMng.GreenLabel;
             }
         }
 
         /// <summary>
         /// "B"表示
         /// </summary>
-        public string Blue
+        public string BlueLabel
         {
             get
             {
-                return _pxlDataViewMng.Blue;
+                return _pxlDataViewMng.BlueLabel;
             }
         }
 
         /// <summary>
         /// "A"表示
         /// </summary>
-        public string Alpha
+        public string AlphaLabel
         {
             get
             {
-                return _pxlDataViewMng.Alpha;
+                return _pxlDataViewMng.AlphaLabel;
             }
         }
 
         /// <summary>
         /// "更新"表示
         /// </summary>
-        public string Update
+        public string UpdateButtonMessage
         {
             get
             {
-                return _pxlDataViewMng.Update;
+                return _pxlDataViewMng.UpdateButtonMessage;
             }
         }
-
 
         #endregion
 
@@ -595,12 +700,18 @@ namespace ImageProcessing.ViewModel
         /// <summary>
         /// 入力されたカラーコードに対応する背景色
         /// </summary>
-        /// <remarks>初期値は白としておく</remarks>
         public Brush InputColorcodeColor
         {
-            get;
-            set;
-        } = new SolidColorBrush(Colors.White);
+            get
+            {
+                return _backChangeViewMng.InputColorcodeColor;
+            }
+            set
+            {
+                _backChangeViewMng.InputColorcodeColor = value;
+                RaisePropertyChanged("InputColorcodeColor");
+            }
+        }
 
         /// <summary>
         /// 入力されたカラーコード
@@ -609,11 +720,11 @@ namespace ImageProcessing.ViewModel
         {
             get
             {
-
+                return _backChangeViewMng.InputColorcode;
             }
             set
             {
-
+                _backChangeViewMng.InputColorcode = value;
                 RaisePropertyChanged("InputColorcode");
             }
         }
@@ -668,9 +779,9 @@ namespace ImageProcessing.ViewModel
         {
             _dropFiles = new ObservableCollection<Entities.DropData>();
             _model = new MainWindowModel(this);
-            _viewManager = new ButtonViewManager();
-            _pxlDataViewMng = new PixelDataViewManager();
-            _backChangeViewMng = new BackgroundChangeViewManager();
+            _imgProcessingViewMng = new ImageProcessingRegionViewManager();
+            _pxlDataViewMng = new PixelDataDisplayRegionViewManager();
+            _backChangeViewMng = new BackgroundChangeRegionViewManager();
             _pixelData = new Entities.PixelData();
 
             // コマンドの初期化処理
@@ -687,6 +798,7 @@ namespace ImageProcessing.ViewModel
             _rightRotate = new RightRotateCommand(RightRotate, IsRightRotateEnabled);
             _leftRotate = new LeftRotateCommand(LeftRotate, IsLeftRotateEnabled);
             _flip = new FlipCommand(Flip, IsFlipEnabled);
+            _scaling = new ScalingCommand(Scaling, IsScalingEnabled);
 
             // Grid.Row = 2
             _update = new UpdateCommand(UpdatePixelInfo, IsUpdateEnabled);
@@ -708,9 +820,9 @@ namespace ImageProcessing.ViewModel
         /// <returns></returns>
         private bool IsRightRotateEnabled()
         {
-            if (_viewManager != null)
+            if (_imgProcessingViewMng != null)
             {
-                return _viewManager.IsRightRotateButtonEnabled;
+                return _imgProcessingViewMng.IsRightRotateButtonEnabled;
             }
 
             // 異常時false
@@ -722,6 +834,12 @@ namespace ImageProcessing.ViewModel
         /// </summary>
         private void RightRotate()
         {
+            // ボタン自体を非活性にはできていないのでここで弾く
+            if (_dropFiles == null || _dropFiles.Any() == false)
+            {
+                return;
+            }
+
             // テスト段階なのでとりあえずリストの0番目を渡す
             Entities.DropData data = _model.RightRotate(_dropFiles[0]);
             Files.Clear();
@@ -738,9 +856,9 @@ namespace ImageProcessing.ViewModel
         /// <returns></returns>
         private bool IsLeftRotateEnabled()
         {
-            if (_viewManager != null)
+            if (_imgProcessingViewMng != null)
             {
-                return _viewManager.IsLeftRotateButtonEnabled;
+                return _imgProcessingViewMng.IsLeftRotateButtonEnabled;
             }
 
             // 異常時false
@@ -752,7 +870,16 @@ namespace ImageProcessing.ViewModel
         /// </summary>
         private void LeftRotate()
         {
+            // ボタン自体を非活性にはできていないのでここで弾く
+            if (_dropFiles == null || _dropFiles.Any() == false)
+            {
+                return;
+            }
 
+            // テスト段階なのでとりあえずリストの0番目を渡す
+            Entities.DropData data = _model.LeftRotate(_dropFiles[0]);
+            Files.Clear();
+            Files.Add(data);
         }
 
         #endregion
@@ -765,9 +892,9 @@ namespace ImageProcessing.ViewModel
         /// <returns></returns>
         private bool IsFlipEnabled()
         {
-            if (_viewManager != null)
+            if (_imgProcessingViewMng != null)
             {
-                return _viewManager.IsFlipButtonEnabled;
+                return _imgProcessingViewMng.IsFlipButtonEnabled;
             }
             return false;
         }
@@ -777,7 +904,51 @@ namespace ImageProcessing.ViewModel
         /// </summary>
         private void Flip()
         {
+            // ボタン自体を非活性にはできていないのでここで弾く
+            if (_dropFiles == null || _dropFiles.Any() == false)
+            {
+                return;
+            }
 
+            // テスト段階なのでとりあえずリストの0番目を渡す
+            Entities.DropData data = _model.Flip(_dropFiles[0]);
+            Files.Clear();
+            Files.Add(data);
+        }
+
+        #endregion
+
+        #region 画像拡縮ボタン関連
+
+        /// <summary>
+        /// 画像拡縮ボタン押下可否
+        /// </summary>
+        /// <returns></returns>
+        private bool IsScalingEnabled()
+        {
+            if (_imgProcessingViewMng != null)
+            {
+                return _imgProcessingViewMng.IsScalingButtonEnabled;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 画像拡縮ボタン押下時の処理
+        /// </summary>
+        /// <param name="sender"></param>
+        private void Scaling(object sender)
+        {
+            // ボタン自体を非活性にはできていないのでここで弾く
+            if (_dropFiles == null || _dropFiles.Any() == false)
+            {
+                return;
+            }
+
+            if (_model != null)
+            {
+                _model.Scaling(_dropFiles[0], sender, WidthScale, HeightScale);
+            }
         }
 
         #endregion
@@ -807,7 +978,6 @@ namespace ImageProcessing.ViewModel
                 InputColorcodeColor = _model.CreateBackgroundColor(sender);
             }
         }
-
 
         #endregion
 
@@ -862,6 +1032,12 @@ namespace ImageProcessing.ViewModel
         /// </summary>
         private void UpdatePixelInfo()
         {
+            // ボタン自体を非活性にはできていないのでここで弾く
+            if (_dropFiles == null || _dropFiles.Any() == false)
+            {
+                return;
+            }
+
             // テスト段階なのでとりあえずリストの先頭要素を更新する
             _dropFiles[0].ImageData = _model.UpdatePixelInfo(_dropFiles[0].ImageData, _pixelData);
         }
