@@ -49,12 +49,7 @@ namespace ImageProcessing.ViewModel
         /// <summary>
         /// 右回転ボタンコマンド
         /// </summary>
-        private RightRotateCommand _rightRotate = null;
-
-        /// <summary>
-        /// 左回転ボタンコマンド
-        /// </summary>
-        private LeftRotateCommand _leftRotate = null;
+        private RotateCommand _rotate = null;
 
         /// <summary>
         /// 反転ボタン押下時コマンド
@@ -107,20 +102,20 @@ namespace ImageProcessing.ViewModel
 
         #region 画像処理領域
 
-        #region 右回転ボタン
+        #region 回転ボタン
 
         /// <summary>
-        /// 右回転ボタンコマンド
+        /// 回転ボタンコマンド
         /// </summary>
-        public RightRotateCommand RightRotateCommand
+        public RotateCommand RotateCommand
         {
             get
             {
-                return _rightRotate;
+                return _rotate;
             }
             private set
             {
-                _rightRotate = value;
+                _rotate = value;
             }
         }
 
@@ -132,25 +127,6 @@ namespace ImageProcessing.ViewModel
             get
             {
                 return _imgProcessingViewMng.RightRotate90;
-            }
-        }
-
-        #endregion
-
-        #region 左回転ボタン
-
-        /// <summary>
-        /// 左回転ボタンコマンド
-        /// </summary>
-        public LeftRotateCommand LeftRotateCommand
-        {
-            get
-            {
-                return _leftRotate;
-            }
-            private set
-            {
-                _leftRotate = value;
             }
         }
 
@@ -795,8 +771,7 @@ namespace ImageProcessing.ViewModel
         private void CommandInitialize()
         {
             // Grid.Row = 1
-            _rightRotate = new RightRotateCommand(RightRotate, IsRightRotateEnabled);
-            _leftRotate = new LeftRotateCommand(LeftRotate, IsLeftRotateEnabled);
+            _rotate = new RotateCommand(Rotate, IsRotateEnabled);
             _flip = new FlipCommand(Flip, IsFlipEnabled);
             _scaling = new ScalingCommand(Scaling, IsScalingEnabled);
 
@@ -812,17 +787,17 @@ namespace ImageProcessing.ViewModel
             _backgroundChange = new BackgroundChangeCommand(BackgroundChange, IsBackgroundChangeEnabled);
         }
 
-        #region 右回転ボタンの登録メソッド
+        #region 回転ボタンの登録メソッド
 
         /// <summary>
-        /// 右回転ボタン押下可否状態判定
+        /// 回転ボタン押下可否状態判定
         /// </summary>
         /// <returns></returns>
-        private bool IsRightRotateEnabled()
+        private bool IsRotateEnabled()
         {
             if (_imgProcessingViewMng != null)
             {
-                return _imgProcessingViewMng.IsRightRotateButtonEnabled;
+                return _imgProcessingViewMng.IsRotateButtonEnabled;
             }
 
             // 異常時false
@@ -830,9 +805,9 @@ namespace ImageProcessing.ViewModel
         }
 
         /// <summary>
-        /// 右回転ボタン押下時の処理
+        /// 回転ボタン押下時の処理
         /// </summary>
-        private void RightRotate()
+        private void Rotate(object sender)
         {
             // ボタン自体を非活性にはできていないのでここで弾く
             if (_dropFiles == null || _dropFiles.Any() == false)
@@ -841,43 +816,7 @@ namespace ImageProcessing.ViewModel
             }
 
             // テスト段階なのでとりあえずリストの0番目を渡す
-            Entities.DropData data = _model.RightRotate(_dropFiles[0]);
-            Files.Clear();
-            Files.Add(data);
-        }
-
-        #endregion
-
-        #region 左回転ボタンの登録メソッド
-
-        /// <summary>
-        /// 左回転ボタン押下可否状態判定
-        /// </summary>
-        /// <returns></returns>
-        private bool IsLeftRotateEnabled()
-        {
-            if (_imgProcessingViewMng != null)
-            {
-                return _imgProcessingViewMng.IsLeftRotateButtonEnabled;
-            }
-
-            // 異常時false
-            return false;
-        }
-
-        /// <summary>
-        /// 左回転ボタン押下時の処理
-        /// </summary>
-        private void LeftRotate()
-        {
-            // ボタン自体を非活性にはできていないのでここで弾く
-            if (_dropFiles == null || _dropFiles.Any() == false)
-            {
-                return;
-            }
-
-            // テスト段階なのでとりあえずリストの0番目を渡す
-            Entities.DropData data = _model.LeftRotate(_dropFiles[0]);
+            Entities.DropData data = _model.Rotate(_dropFiles[0], sender);
             Files.Clear();
             Files.Add(data);
         }
@@ -947,7 +886,10 @@ namespace ImageProcessing.ViewModel
 
             if (_model != null)
             {
-                _model.Scaling(_dropFiles[0], sender, WidthScale, HeightScale);
+                Entities.DropData data = Files[0];
+                data.ImageData = _model.Scaling(_dropFiles[0], sender, WidthScale, HeightScale);
+                Files.Clear();
+                Files.Add(data);
             }
         }
 
@@ -1039,7 +981,10 @@ namespace ImageProcessing.ViewModel
             }
 
             // テスト段階なのでとりあえずリストの先頭要素を更新する
-            _dropFiles[0].ImageData = _model.UpdatePixelInfo(_dropFiles[0].ImageData, _pixelData);
+            Entities.DropData data = _dropFiles[0];
+            data.ImageData = _model.UpdatePixelInfo(_dropFiles[0].ImageParameter, _pixelData);
+            Files.Clear();
+            Files.Add(data);
         }
 
         #endregion

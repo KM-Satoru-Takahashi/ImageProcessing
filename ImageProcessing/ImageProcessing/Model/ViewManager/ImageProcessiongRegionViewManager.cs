@@ -18,19 +18,14 @@ namespace ImageProcessing.Model
         public string RightRotate90 { get; } = "90度右回転";
 
         /// <summary>
-        /// 右回転ボタン使用可否
+        /// 回転ボタン使用可否
         /// </summary>
-        public bool IsRightRotateButtonEnabled { get; set; } = true;
+        public bool IsRotateButtonEnabled { get; set; } = true;
 
         /// <summary>
-        /// 左回転ボタン
+        /// 左回転ボタン表示文言
         /// </summary>
         public string LeftRotate90 { get; } = "90度左回転";
-
-        /// <summary>
-        /// 左回転ボタン使用可否
-        /// </summary>
-        public bool IsLeftRotateButtonEnabled { get; set; } = true;
 
         /// <summary>
         /// 反転ボタン

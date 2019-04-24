@@ -180,65 +180,40 @@ namespace ImageProcessing.Model
         #region 回転
 
         /// <summary>
-        /// 画像右回転処理実行メソッド
+        /// 画像回転処理実行メソッド
         /// </summary>
         /// <returns>右回転した画像のWriteableBMP形式</returns>
         /// <remarks>処理の実体は画処理クラスに定義</remarks>
-        internal DropData RightRotate(DropData dropData)
+        internal DropData Rotate(DropData dropData, object sender)
         {
-            if (dropData == null)
+            if (dropData == null || sender == null)
             {
                 return null;
             }
 
+            RotateDirection rotate = (RotateDirection)sender;
+
             if (_imageManager != null)
             {
-                dropData.ImageData = _imageManager.RightRotate(dropData);
-                // 縦横も変える必要がある
-                byte[] oldWidth = new byte[4];
-                // 旧幅をとっておく
-                Array.Copy(dropData.ImageWidth, 0, oldWidth, 0, 4);
-                // 旧高さを幅に代入
-                Array.Copy(dropData.ImageHeight, 0, dropData.ImageWidth, 0, 4);
-                // 旧幅を高さに代入
-                Array.Copy(oldWidth, 0, dropData.ImageHeight, 0, 4);
+                if (rotate == RotateDirection.Right)
+                {
+                    dropData.ImageData = _imageManager.RightRotate(dropData.ImageParameter);
+                }
+                else if (rotate == RotateDirection.Left)
+                {
+                    dropData.ImageData = _imageManager.LeftRotate(dropData.ImageParameter);
+                }
+                else
+                {
+                    return dropData;
+                }
 
                 return dropData;
             }
 
             return null;
         }
-
-        /// <summary>
-        /// 画像左回転処理実行メソッド
-        /// </summary>
-        /// <returns>右回転した画像のWriteableBMP形式</returns>
-        /// <remarks>処理の実体は画処理クラスに定義</remarks>
-        internal DropData LeftRotate(DropData dropData)
-        {
-            if (dropData == null)
-            {
-                return null;
-            }
-
-            if (_imageManager != null)
-            {
-                dropData.ImageData = _imageManager.LeftRotate(dropData);
-                // 縦横も変える必要がある
-                byte[] oldWidth = new byte[4];
-                // 旧幅をとっておく
-                Array.Copy(dropData.ImageWidth, 0, oldWidth, 0, 4);
-                // 旧高さを幅に代入
-                Array.Copy(dropData.ImageHeight, 0, dropData.ImageWidth, 0, 4);
-                // 旧幅を高さに代入
-                Array.Copy(oldWidth, 0, dropData.ImageHeight, 0, 4);
-
-                return dropData;
-            }
-
-            return null;
-        }
-
+        
         #endregion
 
         #region 画素取得と更新
@@ -268,7 +243,7 @@ namespace ImageProcessing.Model
             }
 
             // 座標から該当する画素値情報を取得する
-            pixelData = _imageManager.GetPixelInfo(dropData.ImageData, mousePoint);
+            pixelData = _imageManager.GetPixelInfo(dropData.ImageParameter, mousePoint);
 
             return pixelData;
         }
@@ -278,11 +253,11 @@ namespace ImageProcessing.Model
         /// </summary>
         /// <param name="pixelData"></param>
         /// <returns></returns>
-        internal WriteableBitmap UpdatePixelInfo(WriteableBitmap updateData, PixelData pixelData)
+        internal WriteableBitmap UpdatePixelInfo(ImageParameter imageParameter, PixelData pixelData)
         {
             // TODO: CheckDropdata みたいなメソッドを作ってupdateDataの正当性をここで担保してもいいかも
             // TODO: ImageManagerにわたす前に他のメソッドでも汎用的に使える可能性があるので
-            return _imageManager.SetPixelInfo(updateData, pixelData);
+            return _imageManager.SetPixelInfo(imageParameter, pixelData);
         }
 
         #endregion
@@ -356,9 +331,7 @@ namespace ImageProcessing.Model
 
             if (_imageManager != null)
             {
-                int width = BitConverter.ToInt32(dropData.ImageWidth, 0);
-                int height = BitConverter.ToInt32(dropData.ImageHeight, 0);
-                dropData.ImageData = _imageManager.Flip(dropData.ImageData, height, width);
+                dropData.ImageData = _imageManager.Flip(dropData.ImageParameter);
                 return dropData;
             }
 
@@ -375,7 +348,7 @@ namespace ImageProcessing.Model
         /// </summary>
         /// <param name="dropData"></param>
         /// <returns>拡縮後のDropDataオブジェクト</returns>
-        internal DropData Scaling(DropData dropData, object sender, string widthPercent, string heightPercent)
+        internal WriteableBitmap Scaling(DropData dropData, object sender, string widthPercent, string heightPercent)
         {
             if (dropData == null || sender == null)
             {
@@ -386,31 +359,38 @@ namespace ImageProcessing.Model
             double widthScale = 0;
             double heightScale = 0;
 
+            // 入力値が不正なときは何もしないで返す
             if (Double.TryParse(widthPercent, out widthScale) == false)
             {
-                return null;
+                return dropData.ImageData;
             }
 
             if (Double.TryParse(heightPercent, out heightScale) == false)
             {
-                return null;
+                return dropData.ImageData;
+            }
+
+            // 縦横比が0以下は異常なので何もせずに返す
+            if (widthScale <= 0 || heightScale <= 0)
+            {
+                return dropData.ImageData;
             }
 
             InterpolationStyle style = (InterpolationStyle)sender;
 
             if (_imageManager == null)
             {
-                return dropData;
+                return dropData.ImageData;
             }
 
             // 正常に受け取れていれば拡縮処理を依頼する
             if (style == InterpolationStyle.NearestNeighbor)
             {
-                return _imageManager.ScalingNearestNeighbor(dropData, widthScale, heightScale);
+                return _imageManager.ScalingNearestNeighbor(dropData.ImageParameter, widthScale, heightScale);
             }
             else if (style == InterpolationStyle.Bilinear)
             {
-                return _imageManager.ScalingBilinear(dropData, widthScale, heightScale);
+                return _imageManager.ScalingBilinear(dropData.ImageParameter, widthScale, heightScale);
             }
 
             return null;

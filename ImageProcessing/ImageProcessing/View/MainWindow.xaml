@@ -49,9 +49,9 @@
                 <ColumnDefinition Width="0.25*"/>
             </Grid.ColumnDefinitions>
             <Button Content="{Binding Path=LeftRotate90ButtonName}" Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" Width="{Binding GeneralContentWidth}"
-                    Command="{Binding LeftRotateCommand}" />
+                    Command="{Binding RotateCommand}" CommandParameter="{x:Static model:RotateDirection.Left}"/>
             <Button Content="{Binding Path=RightRotate90ButtonName}" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" Width="{Binding GeneralContentWidth}" 
-                    Command="{Binding RightRotateCommand}" />
+                    Command="{Binding RotateCommand}" CommandParameter="{x:Static model:RotateDirection.Right}"/>
             <Button Content="{Binding Path=FlipButtonName}" Grid.Row="1" Grid.Column="3" HorizontalAlignment="Center" VerticalAlignment="Center" Width="{Binding GeneralContentWidth}" 
                     Command="{Binding FlipCommand}" />
             <!--拡縮領域-->

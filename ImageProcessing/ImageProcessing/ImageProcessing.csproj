@@ -68,7 +68,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Entities\EntityBase.cs" />
+    <Compile Include="Entities\ImageParameter.cs" />
     <Compile Include="Entities\PixelData.cs" />
+    <Compile Include="Entities\RowData.cs" />
     <Compile Include="Model\Enumeration.cs" />
     <Compile Include="Model\ViewManager\BackgroundChangeRegionViewManager.cs" />
     <Compile Include="Model\ViewManager\ImageProcessiongRegionViewManager.cs" />
@@ -78,8 +80,7 @@
     <Compile Include="Model\ViewInfoAcquisition.cs" />
     <Compile Include="ViewModel\Command\BackgroundChangeCommand.cs" />
     <Compile Include="ViewModel\Command\FlipCommand.cs" />
-    <Compile Include="ViewModel\Command\LeftRotateCommand.cs" />
-    <Compile Include="ViewModel\Command\RightRotateCommand.cs" />
+    <Compile Include="ViewModel\Command\RotateCommand.cs" />
     <Compile Include="ViewModel\Command\ScalingCommand.cs" />
     <Compile Include="ViewModel\Command\UpdateCommand.cs" />
     <Compile Include="ViewModel\Command\WriteableBitmapCommand.cs" />
