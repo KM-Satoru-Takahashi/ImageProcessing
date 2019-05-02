@@ -671,18 +671,22 @@ namespace ImageProcessing.Model
                     // 新要素のインデックス
                     int index = row * newWidth * COLORBYTE_RGBA        // 何行目か
                                             + col * COLORBYTE_RGBA;    // 何列目か
-
+#if false // 旧方式
                     // 最近傍として対応する旧データの要素のインデックス// todo: percentに端数がある場合の対応
                     int oldIndex = (int)((int)(row / widthRatio) * (newWidth / widthRatio) * COLORBYTE_RGBA   // 何行目に対応するか
-                                                          + (int)(col / heightRatio) * COLORBYTE_RGBA);            // 何列目に対応するか
-
+                                                          + (int)(col / heightRatio) * COLORBYTE_RGBA);       // 何列目に対応するか 
                     // 中間値の場合は旧データの近傍(等間隔⇒左上)に合わせる
                     if (oldIndex % COLORBYTE_RGBA != 0)
                     {
                         int remainder = oldIndex % COLORBYTE_RGBA;
                         oldIndex -= remainder;
                     }
-
+#endif
+                    // 新しい配列の画素がどう旧配列の画素に対応するか
+                    // rowとcolを倍率で割って四捨五入した値で計算することで、旧配列との対応を求められる
+                    int oldIndex = ((int)(row / heightRatio)) * imageParameter.ImageWidth * COLORBYTE_RGBA  // 何行目に対応するか
+                                                                    + ((int)(col / widthRatio)) * 4;       // 何列目に対応するか
+                    
                     // BGRAの順に入れ込む
                     newDataArray[index] = oldDataArray[oldIndex];
                     newDataArray[index + 1] = oldDataArray[oldIndex + 1];
@@ -746,9 +750,9 @@ namespace ImageProcessing.Model
         }
 
 
-        #endregion
+#endregion
 
-        #region CreateDataArray
+#region CreateDataArray
 
         /// <summary>
         /// 指定した画像をバイナリデータとして代入可能な空のbyte[]を作成する
@@ -792,7 +796,7 @@ namespace ImageProcessing.Model
             return new byte[stride * height];
         }
 
-        #endregion
+#endregion
 
         /// <summary>
         /// double型PointをInt型Pointに置換する(小数以下切り捨て)
@@ -809,7 +813,7 @@ namespace ImageProcessing.Model
             return intPt;
         }
 
-        #region ConversionDMPtoDPI
+#region ConversionDMPtoDPI
 
         /// <summary>
         /// 解像度のDPM値をDPI値に変換する(バイナリデータ)
@@ -835,7 +839,7 @@ namespace ImageProcessing.Model
             return dpm * INCH / METER;
         }
 
-        #endregion
+#endregion
 
         /// <summary>
         /// BMPのバイナリデータからWriteableBitmapデータを作成する

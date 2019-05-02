@@ -376,6 +376,7 @@ namespace ImageProcessing.Model
                 return dropData.ImageData;
             }
 
+            // キャストして判別する
             InterpolationStyle style = (InterpolationStyle)sender;
 
             if (_imageManager == null)
